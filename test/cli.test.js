@@ -26,3 +26,24 @@ test('apply cursor project writes one file per pack', async () => {
   const output = fs.readFileSync(outputPath, 'utf8');
   assert.match(output, /AI 지침 문서/);
 });
+
+test('apply without --tool writes docs to claude, codex, and cursor targets', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-all-tools-'));
+
+  await run(['apply', 'docs', '--scope', 'project', '--project-path', projectDir]);
+
+  assert.equal(fs.existsSync(path.join(projectDir, 'AGENTS.md')), true);
+  assert.equal(fs.existsSync(path.join(projectDir, 'CLAUDE.md')), true);
+  assert.equal(fs.existsSync(path.join(projectDir, '.cursor', 'rules', 'consis-docs.mdc')), true);
+  assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'ai-instructions', 'SKILL.md')), true);
+  assert.equal(fs.existsSync(path.join(projectDir, '.claude', 'skills', 'ai-instructions', 'SKILL.md')), true);
+});
+
+test('apply spring alias resolves to spring-boot pack', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-spring-'));
+
+  await run(['apply', 'spring', '--tool', 'codex', '--scope', 'project', '--project-path', projectDir]);
+
+  const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
+  assert.match(output, /Spring Boot/);
+});

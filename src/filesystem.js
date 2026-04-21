@@ -6,16 +6,22 @@ function ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
 
-function detectTool(projectPath) {
+function detectTools(projectPath) {
+  const tools = [];
+
+  if (fs.existsSync(path.join(projectPath, '.claude')) || fs.existsSync(path.join(projectPath, 'CLAUDE.md'))) {
+    tools.push('claude');
+  }
+
   if (fs.existsSync(path.join(projectPath, '.cursor')) || fs.existsSync(path.join(projectPath, '.cursor', 'rules'))) {
-    return 'cursor';
+    tools.push('cursor');
   }
 
-  if (fs.existsSync(path.join(projectPath, 'CLAUDE.md')) || fs.existsSync(path.join(projectPath, '.claude'))) {
-    return 'claude';
+  if (fs.existsSync(path.join(projectPath, '.agents')) || fs.existsSync(path.join(projectPath, 'AGENTS.md'))) {
+    tools.push('codex');
   }
 
-  return 'codex';
+  return tools.length > 0 ? tools : ['claude', 'codex', 'cursor'];
 }
 
 function getTargetPath({ tool, scope, projectPath, packName }) {
@@ -40,6 +46,24 @@ function getTargetPath({ tool, scope, projectPath, packName }) {
   }
 
   throw new Error(`Unsupported tool: ${tool}`);
+}
+
+function getDocsSkillPath({ tool, scope, projectPath }) {
+  const homeDir = os.homedir();
+
+  if (tool === 'codex') {
+    return scope === 'global'
+      ? path.join(homeDir, '.agents', 'skills', 'ai-instructions', 'SKILL.md')
+      : path.join(projectPath, '.agents', 'skills', 'ai-instructions', 'SKILL.md');
+  }
+
+  if (tool === 'claude') {
+    return scope === 'global'
+      ? path.join(homeDir, '.claude', 'skills', 'ai-instructions', 'SKILL.md')
+      : path.join(projectPath, '.claude', 'skills', 'ai-instructions', 'SKILL.md');
+  }
+
+  return null;
 }
 
 function upsertManagedBlock(filePath, packName, content) {
@@ -74,9 +98,9 @@ function normalizeTrailingNewline(value) {
 }
 
 module.exports = {
-  detectTool,
+  detectTools,
   getTargetPath,
+  getDocsSkillPath,
   upsertManagedBlock,
   writeCursorFile,
 };
-
