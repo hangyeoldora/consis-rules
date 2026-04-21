@@ -1,7 +1,13 @@
 const path = require('path');
-const { getPackDefinitions, PACK_ORDER, resolvePackName } = require('./data');
 const {
-  detectTools,
+  getPackDefinitions,
+  PACK_ORDER,
+  getSourcePacksForName,
+  resolvePackName,
+  renderDocsRootContent,
+  renderDocsSkillContent,
+} = require('./data');
+const {
   getTargetPath,
   getDocsSkillPath,
   upsertManagedBlock,
@@ -13,6 +19,11 @@ async function run(argv) {
 
   if (!command || command === 'help' || command === '--help' || command === '-h') {
     printHelp();
+    return;
+  }
+
+  if (resolvePackName(command) && getPackMap()[resolvePackName(command)]) {
+    handleApply([command, ...rest]);
     return;
   }
 
@@ -59,11 +70,11 @@ function handleShow(args) {
 function handleApply(args) {
   const parsed = parseApplyArgs(args);
   const packMap = getPackMap();
-  const normalizedPackNames = parsed.packNames.map(resolvePackName);
+  const normalizedPackNames = expandPackNames(parsed.packNames.map(resolvePackName), parsed.autoMode);
   const unknownPacks = normalizedPackNames.filter((name) => !packMap[name]);
 
   if (normalizedPackNames.length === 0) {
-    throw new Error('Usage: consis-rules apply <pack...> [--tool codex|claude|cursor|all] [--scope global|project] [--project-path path]');
+    throw new Error('Usage: consis-rules apply <pack...> [--auto] [--tool codex|claude|cursor|all] [--scope global|project] [--project-path path]');
   }
 
   if (unknownPacks.length > 0) {
@@ -71,7 +82,7 @@ function handleApply(args) {
   }
 
   const projectPath = path.resolve(parsed.projectPath || process.cwd());
-  const tools = resolveTools(parsed.tools, projectPath);
+  const tools = resolveTools(parsed.tools);
   tools.forEach(validateTool);
 
   const scope = parsed.scope || inferDefaultScope(normalizedPackNames, packMap);
@@ -80,6 +91,7 @@ function handleApply(args) {
   for (const tool of tools) {
     for (const packName of normalizedPackNames) {
       const pack = packMap[packName];
+      const packContent = renderPackContentForTool(pack, tool, parsed.autoMode);
       const targetPath = getTargetPath({
         tool,
         scope,
@@ -88,15 +100,15 @@ function handleApply(args) {
       });
 
       if (tool === 'cursor') {
-        writeCursorFile(targetPath, pack.content);
+        writeCursorFile(targetPath, packContent);
       } else {
-        upsertManagedBlock(targetPath, packName, pack.content);
+        upsertManagedBlock(targetPath, packName, packContent);
       }
 
-      if (packName === 'docs' && pack.skillContent) {
+      if (packName === 'docs' && tool !== 'cursor') {
         const skillPath = getDocsSkillPath({ tool, scope, projectPath });
         if (skillPath) {
-          writeCursorFile(skillPath, pack.skillContent);
+          writeCursorFile(skillPath, renderDocsSkillContent(getSourcePacksForName('docs')));
           console.log(`applied ${packName} skill -> ${skillPath}`);
         }
       }
@@ -111,9 +123,15 @@ function parseApplyArgs(args) {
   const tools = [];
   let scope = null;
   let projectPath = null;
+  let autoMode = false;
 
   for (let index = 0; index < args.length; index += 1) {
     const token = args[index];
+
+    if (token === '--auto') {
+      autoMode = true;
+      continue;
+    }
 
     if (token === '--tool') {
       tools.push(args[index + 1]);
@@ -141,6 +159,7 @@ function parseApplyArgs(args) {
     tools,
     scope,
     projectPath,
+    autoMode,
   };
 }
 
@@ -168,9 +187,9 @@ function validateTool(tool) {
   }
 }
 
-function resolveTools(toolArgs, projectPath) {
+function resolveTools(toolArgs) {
   if (!toolArgs || toolArgs.length === 0) {
-    return detectTools(projectPath);
+    return ['claude'];
   }
 
   const expanded = toolArgs
@@ -180,6 +199,24 @@ function resolveTools(toolArgs, projectPath) {
     .flatMap((value) => (value === 'all' ? ['claude', 'codex', 'cursor'] : [value]));
 
   return Array.from(new Set(expanded));
+}
+
+function expandPackNames(packNames, autoMode) {
+  const expanded = [...packNames];
+
+  if (autoMode && !expanded.includes('docs')) {
+    expanded.push('docs');
+  }
+
+  return Array.from(new Set(expanded));
+}
+
+function renderPackContentForTool(pack, tool, autoMode) {
+  if (pack.name === 'docs' && tool !== 'cursor') {
+    return renderDocsRootContent(tool, { autoMode });
+  }
+
+  return pack.content;
 }
 
 function validateScope(scope) {
@@ -194,7 +231,7 @@ function printHelp() {
 Commands:
   consis-rules list
   consis-rules show <pack>
-  consis-rules apply <pack...> [--tool codex|claude|cursor|all] [--scope global|project] [--project-path path]
+  consis-rules apply <pack...> [--auto] [--tool codex|claude|cursor|all] [--scope global|project] [--project-path path]
 
 Packs:
   ${PACK_ORDER.join(', ')}

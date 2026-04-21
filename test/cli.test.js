@@ -27,16 +27,15 @@ test('apply cursor project writes one file per pack', async () => {
   assert.match(output, /AI 지침 문서/);
 });
 
-test('apply without --tool writes docs to claude, codex, and cursor targets', async () => {
-  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-all-tools-'));
+test('apply without --tool defaults to claude only', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-default-'));
 
   await run(['apply', 'docs', '--scope', 'project', '--project-path', projectDir]);
 
-  assert.equal(fs.existsSync(path.join(projectDir, 'AGENTS.md')), true);
   assert.equal(fs.existsSync(path.join(projectDir, 'CLAUDE.md')), true);
-  assert.equal(fs.existsSync(path.join(projectDir, '.cursor', 'rules', 'consis-docs.mdc')), true);
-  assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'ai-instructions', 'SKILL.md')), true);
   assert.equal(fs.existsSync(path.join(projectDir, '.claude', 'skills', 'ai-instructions', 'SKILL.md')), true);
+  assert.equal(fs.existsSync(path.join(projectDir, 'AGENTS.md')), false);
+  assert.equal(fs.existsSync(path.join(projectDir, '.cursor', 'rules', 'consis-docs.mdc')), false);
 });
 
 test('apply spring alias resolves to spring-boot pack', async () => {
@@ -46,4 +45,29 @@ test('apply spring alias resolves to spring-boot pack', async () => {
 
   const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
   assert.match(output, /Spring Boot/);
+});
+
+test('auto mode adds docs but not common for default claude target', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-auto-'));
+
+  await run(['react-ts', '--auto', '--project-path', projectDir]);
+
+  const claudeOutput = fs.readFileSync(path.join(projectDir, 'CLAUDE.md'), 'utf8');
+  assert.match(claudeOutput, /consis-rules:start react-ts/);
+  assert.match(claudeOutput, /consis-rules:start docs/);
+  assert.doesNotMatch(claudeOutput, /consis-rules:start common/);
+  assert.match(claudeOutput, /\/ai-instructions/);
+  assert.equal(fs.existsSync(path.join(projectDir, '.claude', 'skills', 'ai-instructions', 'SKILL.md')), true);
+});
+
+test('auto mode with codex writes codex docs hint and skill file', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-auto-codex-'));
+
+  await run(['apply', 'spring', '--auto', '--tool', 'codex', '--project-path', projectDir]);
+
+  const agentsOutput = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
+  assert.match(agentsOutput, /consis-rules:start spring-boot/);
+  assert.match(agentsOutput, /consis-rules:start docs/);
+  assert.match(agentsOutput, /\$ai-instructions/);
+  assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'ai-instructions', 'SKILL.md')), true);
 });
