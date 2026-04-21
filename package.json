@@ -1,0 +1,31 @@
+{
+  "name": "consis-rules",
+  "version": "0.1.0",
+  "description": "Apply Consis AI rule packs to Codex, Claude, and Cursor projects.",
+  "license": "MIT",
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hangyeoldora/consis-rules.git"
+  },
+  "homepage": "https://github.com/hangyeoldora/consis-rules#readme",
+  "bin": {
+    "consis-rules": "./bin/consis-rules.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "packs.source.json",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "codex",
+    "claude",
+    "cursor",
+    "agents",
+    "rules"
+  ]
+}

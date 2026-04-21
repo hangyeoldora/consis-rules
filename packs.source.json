@@ -1,0 +1,229 @@
+[
+  {
+    "id": "ai-base-rules",
+    "version": "2.0.0",
+    "locale": "ko",
+    "updatedAt": "2026-04-19",
+    "title": "AI 기본 규칙",
+    "description": "모든 프로젝트에 공통 적용되는 AI 코딩 기본 규칙 — 작업 범위, 코드 품질 4원칙, 환각 방지",
+    "longDescription": "프로젝트/언어와 무관하게 모든 AI 코딩 작업에 공통 적용되는 전역 기본 규칙입니다. 작업 범위 제한, 코드 품질 4원칙(가독성·예측 가능성·응집도·결합도), 환각 방지 원칙을 포함합니다. 불필요한 프롬프트 거버넌스나 파이프라인 메타 규칙은 제거되었습니다.",
+    "scope": "global",
+    "tags": [
+      "전사",
+      "AI",
+      "코드품질",
+      "전역"
+    ],
+    "author": "Consis AI",
+    "stars": 210,
+    "featured": true,
+    "rules": [
+      {
+        "id": "base-rules",
+        "title": "전역 기본 규칙",
+        "content": "# Global Base Rules\n\n## 응답 언어\n- 기본 한국어로 응답한다. 사용자가 다른 언어를 요청하면 따른다.\n\n## 작업 범위\n- 요청받은 범위만 수정한다.\n- 관련 없는 리팩터링, 이름 변경, 파일 이동을 함께 하지 않는다.\n- 포매팅과 주석 정리를 기회주의적으로 추가하지 않는다.\n- 요구가 모호하면 가정하기 전에 확인한다.\n\n## 실행 방식\n- 먼저 분석, 이후 구현.\n- 구현은 빠르게 움직이되 파괴적·고위험 변경은 미리 합의한다.\n- 설명은 간결하게, 코드 중심으로.\n- 최소·가역 변경을 우선하고 위험한 작업은 롤백 방법을 함께 적는다.\n\n## 일관성\n- 기존 프로젝트의 구조, 네이밍, 코딩 패턴을 따른다.\n- 새 패턴이나 라이브러리는 명확한 필요와 합의가 있을 때만 도입한다.\n\n## 파일 전략\n- 새 파일 생성보다 기존 파일 업데이트를 우선한다.\n- 문서 파일(*.md)과 README는 사용자가 명시적으로 요청할 때만 생성한다."
+      },
+      {
+        "id": "code-quality",
+        "title": "코드 품질 4원칙",
+        "content": "# 코드 품질 4원칙\n\n## 1. 가독성\n- 같이 실행되지 않는 분기는 컴포넌트/함수로 분리한다.\n- 구현 상세는 이름 있는 함수·훅으로 추상화한다.\n- 조건식과 매직 넘버에 이름을 붙인다.\n- 위에서 아래로 자연스럽게 읽히도록 배치한다.\n\n## 2. 예측 가능성\n- 함수/컴포넌트 이름과 반환 타입을 일관되게 유지한다.\n- 같은 역할의 훅/유틸은 입출력 타입 규약을 통일한다.\n- 숨은 부수효과를 줄이고 명시적 흐름으로 드러낸다.\n\n## 3. 응집도\n- 함께 수정되는 코드는 같은 디렉터리와 모듈 경계에 둔다.\n- 꼭 공유해야 하는 규칙만 공통화한다. 불필요한 공통화는 피한다.\n\n## 4. 결합도\n- 책임을 단일화하여 수정 영향 범위를 줄인다.\n- 과도한 추상화보다 제한된 중복을 허용한다.\n\n## 우선순위\n- 위험도가 높은 영역은 응집도를 우선한다.\n- 위험도가 낮은 영역은 가독성을 우선한다.\n- 최적화보다 이해 가능한 구조를 먼저 확보한다."
+      },
+      {
+        "id": "hallucination-safety",
+        "title": "환각 방지",
+        "content": "# 환각 방지\n\n## API / 라이브러리 사용\n- 존재하지 않는 API, 메서드, 함수를 생성해서 쓰지 않는다.\n- `package.json`, `pom.xml`, 잠금 파일(`package-lock.json`, `pnpm-lock.yaml`)에 명시된 버전의 API만 사용한다.\n- 버전 호환성이 불확실하면 \"해당 버전에서 지원되는지 확인 필요\"라고 명시한다.\n- 문서로 확인되지 않는 동작은 추측하지 않고 사용자에게 확인한다.\n\n## 리팩토링\n- 동작 변경 없이 구조만 개선한다.\n- 한 번에 하나의 리팩토링 유형만 적용한다.\n- 테스트가 없는 코드는 리팩토링 전 최소한의 테스트를 먼저 작성한다.\n\n## 코드 생성 품질\n- 데드 코드, 하드코딩, 누락된 에러 핸들링을 남기지 않는다.\n- 엣지 케이스(빈 입력, null, 비동기 취소)를 점검한다.\n- 리소스 누수(타이머, 리스너, 구독)를 정리한다."
+      }
+    ],
+    "applyScopes": [
+      "global"
+    ]
+  },
+  {
+    "id": "harness-safety",
+    "version": "1.0.0",
+    "locale": "ko",
+    "updatedAt": "2026-04-19",
+    "title": "하네스 안전 규칙",
+    "description": "파괴적 명령·Git 안전·로그 노출 방지 등 AI 에이전트의 예기치 못한 위험 행동을 막는 전역 하드 가드",
+    "longDescription": "코드 품질 가이드가 아니라, AI 에이전트가 실수로 저지를 수 있는 파괴적·비가역적 행동을 사전에 차단하는 하네스 성격 규칙입니다. 모든 프로젝트에 전역 적용합니다.",
+    "scope": "global",
+    "tags": [
+      "전사",
+      "하네스",
+      "안전",
+      "Git",
+      "전역"
+    ],
+    "author": "Consis AI",
+    "stars": 0,
+    "featured": true,
+    "rules": [
+      {
+        "id": "destructive-commands",
+        "title": "파괴적 명령 사전 확인",
+        "content": "# 파괴적 명령\n\n## 반드시 사용자 확인 후 실행\n- `rm -rf`, `git reset --hard`, `git checkout --`, `git clean -f`\n- `git push --force` (특히 `main`/`master` 대상)\n- `DROP TABLE`, `TRUNCATE`, 광범위 `DELETE FROM ... WHERE`\n- 공유 인프라 변경 (CI/CD 파이프라인, 권한 설정, 배포 스크립트)\n- 외부에 영향을 주는 행위: PR close, 메시지 전송(Slack/이메일), 원격 서비스 호출\n\n## 근본 원인 우선\n- 훅 실패, 린트 실패, CI 실패를 `--no-verify`나 `skip-ci`로 우회하지 않고 원인을 해결한다.\n- 예상치 못한 상태(알 수 없는 파일, 브랜치, 설정)가 보이면 삭제·덮어쓰기 전 조사한다.\n- 잠금 파일 등 시스템 아티팩트는 함부로 지우지 않고 원인을 먼저 확인한다."
+      },
+      {
+        "id": "git-safety",
+        "title": "Git 안전 규칙",
+        "content": "# Git 안전\n\n## 금지 사항\n- `main`/`master`에 직접 푸시하지 않는다 — 항상 기능 브랜치에서 PR로.\n- `--force` 푸시는 금지. 꼭 필요하면 `--force-with-lease`를 쓰고 PR/리뷰로 합의한다.\n- 커밋 훅 우회(`--no-verify`), 서명 우회(`--no-gpg-sign`)는 사용자가 명시적으로 요청할 때만.\n- `git config` 임의 변경 금지.\n- `git rebase -i`, `git add -i` 등 인터랙티브 플래그 사용 금지(자동화 컨텍스트 불가).\n\n## 커밋 원칙\n- 기본은 새 커밋 생성. `--amend`는 사용자가 명시적으로 요청할 때만.\n- 스테이징은 `git add <file>`로 구체적으로 지정하고, `git add -A`/`git add .`는 민감 파일 유입 위험이 있어 지양한다.\n- 커밋 전 시크릿·대용량 바이너리가 섞였는지 확인한다.\n\n## 머지 충돌\n- 충돌은 변경을 폐기하지 않고 해결한다."
+      },
+      {
+        "id": "secret-logging",
+        "title": "로그·출력 안전",
+        "content": "# 로그·출력 안전\n\n- 비밀값, 토큰, 크리덴셜을 로그에 남기지 않는다.\n- 사용자 홈 디렉터리 절대 경로는 그대로 로그에 남기지 말고 익명화하거나 상대 경로로 표현한다.\n- 문서 본문·DB 레코드 원문을 로그에 덤프하지 않는다.\n- 에러 메시지에 DB 쿼리, 스택 트레이스, 내부 경로를 프로덕션에서 그대로 노출하지 않는다.\n- 외부 서비스(Slack, 이슈 트래커, 공개 pastebin)로 전송하는 내용에 민감 데이터가 포함됐는지 사전 검토한다.\n- AI 도구(Claude/Codex/Cursor) 프롬프트와 컨텍스트에도 시크릿을 넣지 않는다."
+      }
+    ],
+    "applyScopes": [
+      "global"
+    ]
+  },
+  {
+    "id": "react-typescript",
+    "version": "2.1.0",
+    "locale": "ko",
+    "updatedAt": "2026-04-19",
+    "title": "React + TypeScript",
+    "description": "Consis 사내 React 프로젝트 표준 — 스택·구조·컴포넌트·UI·렌더링 안전·코드 품질",
+    "longDescription": "Consis 사내 React/TypeScript 프로젝트 공통 표준입니다. 실제 회사 프로젝트(aicfo2_mono, system-admin-front, weai-front-admin, weai-main-chat-front)의 공통 스택과 구조를 고정하여, 누가 AI로 작업하더라도 아키텍처·라이브러리·UI 스타일링·린팅·패턴이 일관되도록 강제합니다.",
+    "scope": "stack",
+    "tags": [
+      "react",
+      "typescript",
+      "frontend",
+      "vite",
+      "zustand",
+      "tanstack-query",
+      "tailwind"
+    ],
+    "author": "Consis AI",
+    "stars": 128,
+    "featured": true,
+    "rules": [
+      {
+        "id": "stack-libraries",
+        "title": "스택 / 라이브러리 표준",
+        "content": "# React / TypeScript 스택 표준\n\n## 기반\n- React 18.3.x + TypeScript (strict 모드, `noUnusedLocals`, `noUnusedParameters`)\n- Vite 5.x (신규 프로젝트 고정). 기존 6.x 프로젝트는 유지하되 신규 도입은 5로.\n- Node 18+, 패키지 매니저는 pnpm. 모노레포는 pnpm + Turbo.\n\n## 상태 관리\n- **전역 상태**: `zustand` + `persist` 미들웨어 (localStorage).\n  - 스토어는 `src/stores/` 아래, 파일당 한 스토어.\n  - persist key는 서비스 접두사로 구분 (예: `weai-auth`, `aicfo-filters`).\n- **서버 상태**: `@tanstack/react-query` + `axios`.\n  - 쿼리 키 팩토리 패턴 사용 (`users.list(filters)`, `users.detail(id)`).\n  - axios 인스턴스는 `src/apis/client.ts`에 단일 생성, 인터셉터로 공통 처리.\n- **로컬 상태**: `useState`/`useReducer` — 컴포넌트 경계 안에서.\n\n## 라우팅\n- `react-router-dom` 7.1.x.\n- 라우트 정의는 `src/router/` 또는 `App.tsx` 상단에 집중. 인라인 라우트 정의 금지.\n\n## 스타일\n- Tailwind CSS 기본. 상세 스타일링/UI 규약은 `ui-styling` 룰 참고.\n- 추가 UI 라이브러리는 기존 프로젝트 선택을 따른다 (weai-front-admin: shadcn-ui + Flowbite, system-admin-front: Ant Design). 임의 추가 금지.\n- CSS-in-JS(styled-components, emotion)는 신규 도입 금지.\n\n## 폼\n- 소규모는 컴포넌트 내부 상태로 처리.\n- 검증·에러가 복잡해지면 합의 후 `react-hook-form` 도입 검토.\n\n## 신규 도입 금지 (기존 스택으로 통일)\n- Redux, Recoil, Jotai, SWR, MobX.\n- Moment.js (대신 `date-fns` 또는 네이티브 Intl).\n- styled-components, emotion."
+      },
+      {
+        "id": "ui-styling",
+        "title": "UI / 스타일링 (Tailwind CSS)",
+        "content": "# UI / 스타일링 — Tailwind CSS\n\n## 기본 원칙\n- Tailwind utility-first를 유지한다. 커스텀 CSS 파일은 최소화한다.\n- 디자인 토큰은 `tailwind.config.ts`의 `theme.extend`로 확장한다.\n- `@apply`는 디자인 토큰화 또는 외부 라이브러리 오버라이드 같은 예외적 용도로만 쓴다.\n- CSS Modules, styled-components, emotion 등 다른 스타일링 시스템을 혼용하지 않는다.\n\n## 클래스 작성\n- 클래스 순서: 레이아웃 → 박스 모델 → 스페이싱 → 타이포 → 색상/배경 → 테두리 → 상태(hover/focus/disabled) → 반응형 → 애니메이션.\n- 정렬은 `prettier-plugin-tailwindcss`로 자동화한다. 수동으로 섞지 않는다.\n- 조건부 클래스는 `clsx` 또는 `cn()` 헬퍼로 조합한다. 문자열 템플릿 리터럴 금지.\n- 동적 클래스명은 JIT가 인식하지 못하므로 조건으로 **전체 클래스 문자열**을 선택한다 (`active ? 'bg-blue-500' : 'bg-gray-200'`). `bg-${color}-500` 패턴 금지.\n\n## 반응형\n- 모바일 우선(mobile-first). 기본 스타일은 모바일, 이후 `sm:` → `md:` → `lg:` → `xl:` → `2xl:` 순으로 확장.\n- 브레이크포인트를 임의로 늘리지 않는다. 필요하면 config에 등록 후 합의.\n\n## 임의 값 / 토큰\n- `w-[237px]` 같은 임의 값(arbitrary values)은 피하고 스케일 토큰(`w-60`)을 쓴다.\n- 피할 수 없는 값은 `tailwind.config`에 토큰으로 등록해 공유한다.\n- 색상은 디자인 토큰(`bg-background`, `text-foreground`)을 우선, 원시 색상(`bg-[#1a73e8]`)은 예외로만.\n\n## 다크모드\n- `dark:` prefix 사용. 전략은 프로젝트 하나(`class` 전략 권장)로 통일.\n- 다크 스타일은 원본 스타일 바로 뒤에 붙인다 (`bg-white dark:bg-gray-900`).\n\n## 재사용 / 추상화\n- 동일 utility 패턴이 3회 이상 반복되면 컴포넌트로 추출한다.\n- 변형(variant)이 많은 컴포넌트는 `class-variance-authority` 또는 `tailwind-variants`로 관리한다.\n- 2회 이하 반복은 중복을 허용한다 — 성급한 추상화를 피한다.\n\n## UI 라이브러리\n- 프로젝트당 UI 라이브러리는 **하나만** 채택한다 (shadcn-ui / Ant Design / Flowbite 중).\n- 라이브러리를 섞지 않는다. 이미 채택된 것을 유지한다.\n- 신규 UI 라이브러리 도입은 합의 후 진행.\n\n## 인라인 스타일\n- `style={{}}`은 런타임 계산 값(동적 좌표, 사용자 입력 색상 등)에만 사용한다.\n- 정적 값은 Tailwind 클래스로 표현한다.\n\n## 접근성\n- 버튼/링크는 semantic HTML 태그를 쓴다 (`<button>`, `<a>`). `<div onClick>` 금지.\n- `aria-*` 속성은 역할/상태를 정확히 반영한다.\n- 포커스 링(`focus-visible:ring-*`)을 제거하지 않는다. 디자인상 가리려면 커스텀 포커스 스타일을 반드시 제공한다.\n- 색상만으로 정보를 전달하지 않는다 (아이콘/텍스트/패턴 병기).\n\n## 폰트 / 아이콘\n- 아이콘은 프로젝트 단일 라이브러리를 유지한다 (`lucide-react` / `@ant-design/icons` 등 기존 선택 따름).\n- 폰트는 `tailwind.config`의 `theme.fontFamily`로 관리하고, 컴포넌트에서 `font-*` 유틸로 참조한다."
+      },
+      {
+        "id": "project-structure",
+        "title": "프로젝트 구조",
+        "content": "# 프로젝트 구조\n\n## 디렉터리 (src/ 기준)\n```\nsrc/\n  apis/         # axios 클라이언트, 도메인별 API 함수\n  components/   # 재사용 UI 컴포넌트\n  constants/    # 상수, `as const` 객체\n  hooks/        # 커스텀 훅\n  pages/        # 라우트 단위 페이지\n  stores/       # zustand 스토어\n  types/        # 전역 타입 정의\n  assets/       # 이미지, 아이콘 등 정적 자원\n```\n\n## Path alias\n- `tsconfig.json`과 `vite.config.ts`에서 동일 설정:\n  - `@apis/*`, `@components/*`, `@constants/*`, `@hooks/*`\n  - `@pages/*`, `@stores/*`, `@types/*`, `@assets/*`\n- 상대 경로 `../../../`보다 alias를 우선한다.\n\n## 파일 네이밍\n- 컴포넌트: PascalCase (`UserProfile.tsx`).\n- 훅: camelCase + `use` 접두사 (`useAuth.ts`).\n- 유틸/상수: 기존 프로젝트 스타일 따름.\n- 테스트: `<대상>.test.{ts,tsx}`.\n\n## 배럴 파일\n- `index.ts`로 `export *` 대량 재수출은 번들 팽창을 유발하므로 지양.\n- 필요한 경우 명시적 이름 재수출만."
+      },
+      {
+        "id": "components-hooks",
+        "title": "컴포넌트 · 훅 규칙",
+        "content": "# 컴포넌트 · 훅 규칙\n\n## 컴포넌트\n- 함수형 컴포넌트만 사용 (클래스 금지).\n- 컴포넌트당 하나의 책임, 150줄 넘으면 분리 검토.\n- Props는 `interface`로 명시적 정의, `any` 금지 (불가피한 경우 `unknown`).\n- 컴포넌트 내부에서 다른 컴포넌트를 정의하지 않는다 (매 렌더마다 재마운트되어 상태 소실·성능 저하).\n\n## 이름 규칙\n- 컴포넌트: PascalCase.\n- 훅: camelCase + `use` 접두사.\n- 이벤트 핸들러: `handle` 접두사 (`handleClick`, `handleSubmit`).\n- Props: camelCase.\n\n## 훅 사용\n- `useEffect`: 의존성 배열 항상 명시. 관심사별로 분리. 클린업 함수 작성(구독·타이머·요청 취소).\n- `useState`: 관련 상태를 객체로 묶거나 복잡하면 `useReducer` 고려.\n- `useCallback`/`useMemo`: 자식 재렌더 방지에 필요할 때만. 원시값 memo는 하지 않는다.\n- 커스텀 훅: 재사용 로직 추출, JSX 반환 금지, 기존 훅을 조합해야 한다.\n\n## 타입\n- Props는 `interface`, 유니온/인터섹션은 `type`.\n- 제네릭 파라미터는 의미 있는 이름 (`T` 대신 `TData`, `TError`).\n- `enum` 대신 `as const` 객체 사용.\n- 타입만 임포트할 때는 `import type`.\n- null 체크는 옵셔널 체이닝(`?.`)으로.\n\n## 리스트 렌더\n- `key`는 안정적인 id 사용, 배열 index 금지 (순서가 바뀌거나 추가/삭제되는 리스트)."
+      },
+      {
+        "id": "rendering-safety",
+        "title": "렌더링 안전 규칙",
+        "content": "# 렌더링 안전\n\n## 리렌더링 방지\n- 렌더 중 `setState` 호출 금지 — 이벤트 핸들러나 `useEffect`로.\n- 콜백에서만 쓰이는 상태는 `useState`로 구독하지 말고 `useRef`로.\n- 비싼 파생 값은 `useMemo`, 단 원시값에는 남용하지 않는다.\n- 함수형 `setState`로 안정 콜백의 의존성을 줄인다.\n- `useState(() => initValue)`로 비싼 초기화를 지연한다.\n- `useEffectEvent` 결과값을 의존성 배열에 넣지 않는다.\n\n## 조건부 렌더\n- `{cond && <X />}` 대신 `{cond ? <X /> : null}` 선호. falsy(0, '') DOM 출력, hydration mismatch 방지.\n- 로딩/에러/빈 상태를 항상 다룬다.\n\n## 번들 크기\n- 배럴 파일에서 import 회피, 모듈 직접 경로로.\n- 무거운 컴포넌트는 `React.lazy` + `Suspense` 또는 라우트 기반 코드 스플릿.\n- 분석·로깅 라이브러리는 hydration 이후 지연 로딩.\n\n## 사이드 이펙트\n- 구독 해제, 타이머 정리, `AbortController`로 요청 취소를 반드시 수행.\n- 전역 이벤트 리스너는 가능한 경우 `{ passive: true }`로 추가.\n\n## 참조 안정성\n- props로 내려가는 객체/배열은 메모이제이션하거나 상위에서 호이스트.\n- 비긴급 업데이트는 `startTransition`, 무거운 파생값은 `useDeferredValue`."
+      },
+      {
+        "id": "code-quality-react",
+        "title": "코드 품질 (React 맥락)",
+        "content": "# 코드 품질 — React 맥락\n\n## 가독성\n- 역할별 컴포넌트로 분리한다 (예: `ViewerSubmitButton` / `AdminSubmitButton`). 권한 분기를 한 컴포넌트에 섞지 않는다.\n- 로그인 체크 같은 횡단 관심은 Wrapper 컴포넌트 또는 HOC(`AuthGuard`)로 추상화한다.\n- 복잡한 조건식에 이름을 붙인다 (`isSameCategory`, `isPriceInRange`).\n- 매직 넘버는 상수화한다 (`const ANIMATION_DELAY_MS = 300`).\n\n## 예측 가능성\n- 같은 이름의 함수가 다른 동작을 하지 않게 한다 (`http` vs `httpService` 같은 혼동 방지).\n- 훅의 반환 타입을 역할별로 통일한다.\n- 숨은 로직을 이름으로 드러낸다 (`getWithAuth`, `fetchWithRetry`).\n\n## 응집도\n- 함께 수정되는 컴포넌트·훅·유틸은 같은 디렉터리에 둔다.\n- 페이지별 폴더 안에 로컬 컴포넌트/훅을 배치한다.\n\n## 결합도\n- 쿼리 파라미터, 상태, API 호출처럼 다른 책임의 훅을 쪼갠다 (`usePageState` → `useCardIdQueryParam`, `useDateRangeQueryParam`).\n- 중복을 무조건 공통화하지 않는다 — 결합도가 올라가면 중복을 허용한다.\n- Props Drilling이 깊어지면 Context 또는 상태 관리로 전환.\n\n## 폼 응집도\n- 필드 단위 응집: 독립 검증, 재사용성↑\n- 폼 전체 응집: 중앙 집중, 이해 쉬움, 재사용성↓\n- 변경 단위가 폼 단위면 전체 응집을 고려한다.\n\n## 참고\n- 사내 참고 문서: `reference/rules-ref/toss.md` (토스 4원칙), `clean code.md`."
+      }
+    ],
+    "applyScopes": [
+      "project"
+    ]
+  },
+  {
+    "id": "spring-boot",
+    "version": "2.0.0",
+    "locale": "ko",
+    "updatedAt": "2026-04-19",
+    "title": "Spring Boot",
+    "description": "Java Spring Boot 백엔드 표준 — 아키텍처·REST·보안·테스트",
+    "longDescription": "Spring Boot 3.x + Java 17+ 환경의 백엔드 표준입니다. 레이어드 아키텍처, REST API 설계, 백엔드 보안(SQL 인젝션·인증·입력 검증), 테스트 전략을 포함합니다.",
+    "scope": "stack",
+    "tags": [
+      "spring",
+      "java",
+      "backend",
+      "rest-api",
+      "security"
+    ],
+    "author": "Consis AI",
+    "stars": 94,
+    "featured": true,
+    "rules": [
+      {
+        "id": "architecture",
+        "title": "아키텍처 규칙",
+        "content": "# Spring Boot Architecture\n\n## 레이어\n- Controller → Service → Repository (단방향 의존).\n- 레이어 간 통신은 DTO. Entity는 Repository 밖으로 노출 금지.\n- 비즈니스 로직은 Service에 집중, Controller는 얇게.\n- 트랜잭션 경계(`@Transactional`)는 Service 레이어에서 명시.\n\n## 패키지 구조\n```\ncom.example.app/\n  controller/\n  service/\n  repository/\n  domain/    # Entity\n  dto/\n  config/\n  exception/\n```\n\n## 의존성 주입\n- 생성자 주입 사용 (필드 주입 금지).\n- Lombok `@RequiredArgsConstructor` 활용.\n- 순환 의존이 발생하면 책임 재설계.\n\n## 설정\n- `application.yml`과 프로파일별(`application-dev.yml`, `application-prod.yml`) 분리.\n- 시크릿은 `application-secret.yml` 또는 환경 변수, `.gitignore`에 포함."
+      },
+      {
+        "id": "rest-api",
+        "title": "REST API 규칙",
+        "content": "# REST API Rules\n\n## URL 설계\n- 리소스는 복수형 명사 (`users`, `orders`).\n- HTTP 메서드로 행위 표현, URL에 동사 지양.\n- 버전 관리: `/api/v1/`.\n\n## 응답 형식\n- 공통 응답 래퍼 클래스 사용.\n- HTTP 상태 코드를 의미에 맞게 사용.\n- 에러 응답은 `code`, `message`, `timestamp` 포함.\n\n## 유효성 검사\n- Controller: `@Valid`, `@Validated` + Bean Validation.\n- Service: 비즈니스 규칙 검증.\n- 전역 예외 처리기(`@RestControllerAdvice`)로 `ConstraintViolationException`, `MethodArgumentNotValidException` 일괄 매핑.\n\n## 페이징 / 정렬\n- `Pageable`을 활용하되 기본값·최대값을 명시한다.\n- 정렬 키는 화이트리스트로 제한한다."
+      },
+      {
+        "id": "backend-security",
+        "title": "백엔드 보안",
+        "content": "# 백엔드 보안\n\n## SQL 인젝션 방지\n- 파라미터 바인딩 필수. 문자열 연결로 SQL 구성 금지.\n- ORM/쿼리 빌더 사용 시에도 raw query에 사용자 입력을 직접 삽입하지 않는다.\n- 동적 테이블명/컬럼명이 필요하면 화이트리스트 검증.\n\n## 인증 / 인가\n- Spring Security 기반으로 구현.\n- 비밀번호는 BCrypt 인코딩 (평문 저장 금지).\n- CORS: 허용 origin을 명시 (`*` 금지).\n- 세션/토큰은 적절한 만료 시간 설정, 리프레시 토큰 rotation 고려.\n\n## 에러 응답 보안\n- 프로덕션에서 상세 에러 메시지 비활성화.\n- 스택 트레이스, DB 쿼리, 내부 경로를 응답에 노출하지 않는다.\n- 로그 레벨은 환경별로 조정, 민감 필드는 마스킹.\n\n## 입력 검증\n- Controller: `@Valid` + Bean Validation.\n- Service: 비즈니스 규칙 검증.\n- 파일 업로드: 확장자 + MIME 타입 + 크기 검증.\n\n## 시크릿\n- `application-secret.yml`을 `.gitignore`에 포함, 환경 변수 또는 시크릿 매니저 사용."
+      },
+      {
+        "id": "testing",
+        "title": "테스트 규칙",
+        "content": "# Spring Testing Rules\n\n## 테스트 전략\n- 단위 테스트: Service, 도메인 로직.\n- 통합 테스트: Controller (`MockMvc`), Repository.\n- `@SpringBootTest`는 최소화 — 기본은 슬라이스 테스트(`@WebMvcTest`, `@DataJpaTest`).\n\n## 네이밍\n- 메서드: `should_행위_when_조건`.\n- 클래스: `<대상>Test`.\n\n## Mockito\n- `@MockBean`보다 `@Mock` + `@InjectMocks` 선호.\n- `verify()`로 상호작용 검증.\n- 고정값에 `ArgumentCaptor` 활용.\n\n## 테스트 데이터\n- 테스트 픽스처는 한 곳에 모아 관리.\n- DB 상태 초기화는 `@Transactional` 또는 명시적 cleanup."
+      }
+    ],
+    "applyScopes": [
+      "project"
+    ]
+  },
+  {
+    "id": "ai-instructions",
+    "version": "1.0.0",
+    "locale": "ko",
+    "updatedAt": "2026-04-19",
+    "title": "AI 지침 문서",
+    "description": "CLAUDE.md / AGENTS.md / Cursor rules 같은 AI 지침 문서를 관리하는 규칙",
+    "longDescription": "Claude, Codex, Cursor가 읽는 AI 지침 문서를 루트 라우터 + 하위 폴더 문서 + 필요 시 호출하는 skill 구조로 정리하고 유지하는 규칙입니다. 긴 절차는 상시 컨텍스트에 넣지 않고, 필요한 경우에만 skill로 호출합니다.",
+    "scope": "stack",
+    "tags": [
+      "AI",
+      "지침 문서",
+      "CLAUDE.md",
+      "AGENTS.md",
+      "Skills",
+      "한국어"
+    ],
+    "author": "Consis AI",
+    "stars": 72,
+    "featured": true,
+    "rules": [
+      {
+        "id": "root-router",
+        "title": "루트 문서는 짧은 라우터로 유지",
+        "content": "# 루트 AI 지침 문서\n\n## 규칙\n- 루트 `AGENTS.md`와 `CLAUDE.md`는 200줄 이하로 유지한다.\n- 루트에는 프로젝트 전체에 적용되는 공통 규칙만 둔다.\n- 루트 문서에는 명령, 아키텍처 지도, 하위 문서 링크, 검증 기준만 둔다.\n- 긴 절차성 안내는 루트 문서가 아니라 skill reference 또는 `docs/`에 둔다."
+      },
+      {
+        "id": "scoped-files",
+        "title": "하위 문서는 코드 가까이에 배치",
+        "content": "# 하위 AI 지침 문서\n\n실제 서브시스템 경계가 있는 폴더 가까이에 하위 `AGENTS.md`와 `CLAUDE.md`를 둔다.\n\n## 좋은 후보\n- `frontend/AGENTS.md`와 `frontend/CLAUDE.md`\n- `backend/AGENTS.md`와 `backend/CLAUDE.md`\n- `apps/web/AGENTS.md`와 `apps/web/CLAUDE.md`\n- `services/api/AGENTS.md`와 `services/api/CLAUDE.md`\n- `packages/ui/AGENTS.md`와 `packages/ui/CLAUDE.md`\n\n하위 문서에는 해당 폴더의 책임, 주요 파일, 로컬 제약, 로컬 테스트만 둔다."
+      },
+      {
+        "id": "skill-only-workflows",
+        "title": "긴 절차는 skill로 분리",
+        "content": "# Skill 기반 절차\n\nAI 지침 문서 정리처럼 긴 절차는 루트 `CLAUDE.md` / `AGENTS.md`에 상시 포함하지 않는다.\n\n## Claude\n- `.claude/skills/ai-instructions/SKILL.md`\n- 필요할 때 `/ai-instructions`로 호출한다.\n\n## Codex\n- `.agents/skills/ai-instructions/SKILL.md`\n- 필요할 때 `$ai-instructions`로 호출한다.\n\n루트 문서에는 skill 위치와 호출 방법만 짧게 안내한다."
+      },
+      {
+        "id": "korean-language",
+        "title": "한국어 기본 언어 규칙",
+        "content": "# 한국어 기본 언어 규칙\n\n- 사용자가 다른 언어를 명시하지 않으면 한국어로 응답한다.\n- 루트 `AGENTS.md`, `CLAUDE.md`, 하위 지침 문서, Rules 설명은 한국어를 기본으로 작성한다.\n- 기존 AI 지침 문서가 영어이면 의미를 보존해 한국어로 정리한다.\n- 일반 `docs/` 문서나 외부 참조 문서는 사용자가 요청하지 않으면 번역하지 않는다.\n- 코드 식별자, 명령어, 파일 경로, API 이름은 원문을 유지한다."
+      }
+    ],
+    "applyScopes": [
+      "project"
+    ]
+  }
+]
