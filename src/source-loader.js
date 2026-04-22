@@ -5,6 +5,8 @@ const DEFAULT_SOURCE_URL = 'https://consis-rules-directory.pages.dev/packs.json'
 
 const PACK_ID_MAP = {
   common: 'ai-base-rules',
+  security: 'security-standards',
+  'git-workflow': 'git-workflow',
   safety: 'harness-safety',
   'react-ts': 'react-typescript',
   'spring-boot': 'spring-boot',

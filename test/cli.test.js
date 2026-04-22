@@ -5,6 +5,10 @@ const http = require('http');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
+// 테스트는 로컬 packs.source.json을 사용한다. 명시적 --source-url을 받는 테스트만
+// 해당 URL로 덮어써서 remote fetch를 검증한다.
+process.env.AI_TEAM_RULES_SOURCE_URL = 'http://127.0.0.1:1/unreachable';
+
 const { run } = require('../src/cli');
 
 test('apply codex project writes full stack rules inline into AGENTS.md', async () => {
@@ -78,6 +82,64 @@ test('apply without --tool defaults to claude only', async () => {
   assert.equal(fs.existsSync(path.join(projectDir, '.cursor', 'rules', 'consis-docs.mdc')), false);
 });
 
+test('common pack bundles ai-base-rules, security-standards, git-workflow', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-common-bundle-'));
+
+  await run(['apply', 'common', '--tool', 'codex', '--scope', 'project', '--project-path', projectDir]);
+
+  const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
+  assert.match(output, /ai-team-rules:start common/);
+  // ai-base-rules
+  assert.match(output, /코드 품질 4원칙|환각 방지|AI 기본 규칙/);
+  // security-standards
+  assert.match(output, /보안 표준|AI 도구별 보안|XSS|시크릿/);
+  // git-workflow
+  assert.match(output, /커밋 메시지|PR \/ 브랜치|브랜치 안전|Git 워크플로우/);
+});
+
+test('security pack applies security-standards only', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-security-'));
+
+  await run(['apply', 'security', '--tool', 'codex', '--scope', 'project', '--project-path', projectDir]);
+
+  const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
+  assert.match(output, /ai-team-rules:start security/);
+  assert.match(output, /AI 도구별 보안|XSS|시크릿/);
+  assert.doesNotMatch(output, /ai-team-rules:start common/);
+});
+
+test('git-workflow pack applies commit-messages and pr-safety', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-git-'));
+
+  await run(['apply', 'git-workflow', '--tool', 'codex', '--scope', 'project', '--project-path', projectDir]);
+
+  const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
+  assert.match(output, /ai-team-rules:start git-workflow/);
+  assert.match(output, /커밋 메시지/);
+  assert.match(output, /한 줄 커밋/);
+  assert.doesNotMatch(output, /Commit Message Rules/);
+});
+
+test('git alias resolves to git-workflow pack', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-git-alias-'));
+
+  await run(['apply', 'git', '--tool', 'codex', '--scope', 'project', '--project-path', projectDir]);
+
+  const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
+  assert.match(output, /ai-team-rules:start git-workflow/);
+});
+
+test('tool-security rule is in Korean', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-toolsec-'));
+
+  await run(['apply', 'security', '--tool', 'codex', '--scope', 'project', '--project-path', projectDir]);
+
+  const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
+  assert.match(output, /AI 도구별 보안 운영 원칙/);
+  assert.doesNotMatch(output, /AI Tool Security Operating Principles/);
+  assert.doesNotMatch(output, /Do not enforce one fixed access policy/);
+});
+
 test('apply spring alias resolves to spring-boot pack', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-spring-'));
 
@@ -124,6 +186,16 @@ test('list can load packs from remote directory json', async () => {
       id: 'ai-base-rules',
       title: 'AI 기본 규칙',
       rules: [{ id: 'base-rules', title: '전역 기본 규칙', content: '# Base\n\n- a' }],
+    },
+    {
+      id: 'security-standards',
+      title: '보안 표준',
+      rules: [{ id: 'common-security', title: '공통 보안', content: '# Sec\n\n- s' }],
+    },
+    {
+      id: 'git-workflow',
+      title: 'Git 워크플로우',
+      rules: [{ id: 'commit-messages', title: '커밋 메시지 규칙', content: '# Commit\n\n- c' }],
     },
     {
       id: 'harness-safety',

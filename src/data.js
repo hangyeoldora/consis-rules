@@ -2,9 +2,19 @@ const { PACK_ID_MAP } = require('./source-loader');
 
 const PACK_SPECS = {
   common: {
-    sourceIds: [PACK_ID_MAP.common],
+    sourceIds: [PACK_ID_MAP.common, PACK_ID_MAP.security, PACK_ID_MAP['git-workflow']],
     defaultScope: 'global',
     aliases: ['base'],
+  },
+  security: {
+    sourceIds: [PACK_ID_MAP.security],
+    defaultScope: 'global',
+    aliases: ['security-standards'],
+  },
+  'git-workflow': {
+    sourceIds: [PACK_ID_MAP['git-workflow']],
+    defaultScope: 'global',
+    aliases: ['git', 'git-flow'],
   },
   safety: {
     sourceIds: [PACK_ID_MAP.safety],
@@ -28,7 +38,7 @@ const PACK_SPECS = {
   },
 };
 
-const PACK_ORDER = ['common', 'safety', 'react-ts', 'spring-boot', 'docs'];
+const PACK_ORDER = ['common', 'security', 'git-workflow', 'safety', 'react-ts', 'spring-boot', 'docs'];
 
 function getPackSource(sourcePacks, id) {
   const pack = sourcePacks.find((entry) => entry.id === id);
@@ -185,7 +195,9 @@ function getSkillDescription(skillName) {
 
 function getCursorRuleDescription(packName) {
   const descriptions = {
-    common: '팀 공통 AI 작업 기본 규칙을 항상 적용한다.',
+    common: '팀 공통 AI 작업 기본 규칙, 보안 표준, Git 워크플로우를 항상 적용한다.',
+    security: '프론트엔드/공통 보안 및 AI 도구 보안 규칙을 항상 적용한다.',
+    'git-workflow': '커밋 메시지와 PR/브랜치 워크플로우 규칙을 항상 적용한다.',
     safety: '파괴적 명령과 Git, 로그 노출 관련 안전 규칙을 항상 적용한다.',
     'react-ts': 'React와 TypeScript 프론트엔드 작업 규칙을 항상 적용한다.',
     'spring-boot': 'Spring Boot 백엔드 작업 규칙을 항상 적용한다.',

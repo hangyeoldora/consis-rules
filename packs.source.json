@@ -39,6 +39,36 @@
     ]
   },
   {
+    "id": "security-standards",
+    "title": "보안 표준",
+    "description": "프론트엔드 XSS, 공통 시크릿 관리, AI 도구 보안 운영 원칙 — 전역 적용 보안 규칙",
+    "scope": "global",
+    "tags": [
+      "전사",
+      "보안",
+      "XSS",
+      "시크릿",
+      "전역"
+    ],
+    "rules": [
+      {
+        "id": "frontend-security",
+        "title": "프론트엔드 보안",
+        "content": "# 프론트엔드 보안\n\n## XSS (Cross-Site Scripting) 방지\n- 사용자 입력을 HTML에 직접 삽입 금지.\n- `dangerouslySetInnerHTML`은 반드시 DOMPurify 등으로 sanitize 후 사용.\n- URL 파라미터, 쿼리스트링의 사용자 입력은 검증·인코딩한다.\n- 사용자 입력이 포함된 동적 HTML 생성 시 이스케이프 처리.\n\n## 민감 정보 노출 금지\n- API 키·시크릿을 클라이언트 코드에 두지 않는다 — 환경 변수 + 서버 프록시 사용.\n- 민감 정보가 브라우저 콘솔, 로컬 스토리지, 네트워크 탭에 노출되지 않도록 확인.\n- 에러 메시지에 내부 구현 세부사항을 노출하지 않는다.\n\n## URL·리다이렉트\n- 사용자 제어 URL을 그대로 `window.location`이나 `<a href>`로 쓰지 않는다. 화이트리스트 검증."
+      },
+      {
+        "id": "common-security",
+        "title": "공통 보안 / 시크릿 관리",
+        "content": "# 공통 보안\n\n## 시크릿 관리\n- 비밀번호·토큰·키를 로그에 출력 금지.\n- `.env`, `application-secret.yml` 등 시크릿 파일은 `.gitignore`에 반드시 포함.\n- 하드코딩된 시크릿 금지 — 환경 변수 또는 시크릿 매니저를 사용.\n- 커밋 전 시크릿 포함 여부 확인.\n\n## 의존성 보안\n- 의존성 패키지의 알려진 취약점을 정기 점검한다.\n  - 프론트엔드: `npm audit`, `pnpm audit`\n  - 백엔드: OWASP Dependency-Check\n- 취약점 발견 시 가능한 한 빠르게 업데이트.\n\n## 데이터 보호\n- 개인정보·금융정보 등 민감 데이터는 암호화하여 저장.\n- 로그에 민감 데이터를 마스킹 처리.\n- 불필요한 데이터 수집·저장을 최소화.\n\n## 보안 체크리스트\n- [ ] 사용자 입력에 대한 검증/sanitize가 있는가?\n- [ ] 민감 정보가 클라이언트/로그에 노출되지 않는가?\n- [ ] 하드코딩된 시크릿이 없는가?\n- [ ] `.gitignore`에 시크릿 파일이 포함되어 있는가?"
+      },
+      {
+        "id": "tool-security",
+        "title": "AI 도구별 보안 설정",
+        "content": "# AI 도구별 보안 운영 원칙\n\n## 핵심 방침\n- Claude, Codex, Cursor에 대해 하나의 고정된 접근 정책을 강제하지 않는다.\n- 팀의 리스크 수준과 작업 유형에 맞춰 접근 제어를 선택한다.\n- 로컬 개발 속도를 저해하는 일괄 차단은 피한다.\n\n## 권장 기준선\n- 최소 권한으로 시작하고, 명시적 근거가 있을 때만 권한을 확장한다.\n- 파괴적 명령, 배포, 인프라 변경에는 리뷰 체크포인트를 둔다.\n- 자동 실행(auto-run)이나 자동 적용(auto-apply)은 기본값이 아니라 팀 정책으로 설정한다.\n\n## 시크릿 처리\n- 토큰, 키, 자격 증명을 프롬프트나 로그에 넣지 않는다.\n- 민감한 출력은 공유 전에 마스킹하거나 요약한다.\n\n## 거버넌스 체크리스트\n- 작업 리스크가 분류되어 있는가 (읽기 / 편집 / 배포).\n- 선택한 권한 모델이 PR 또는 작업 노트에 문서화되어 있는가.\n- 머지 전에 민감 데이터 노출을 확인했는가."
+      }
+    ]
+  },
+  {
     "id": "harness-safety",
     "version": "1.0.0",
     "locale": "ko",
@@ -76,6 +106,30 @@
     ],
     "applyScopes": [
       "global"
+    ]
+  },
+  {
+    "id": "git-workflow",
+    "title": "Git 워크플로우",
+    "description": "커밋 메시지 형식과 PR/브랜치 안전 규칙",
+    "scope": "global",
+    "tags": [
+      "git",
+      "workflow",
+      "team",
+      "전역"
+    ],
+    "rules": [
+      {
+        "id": "commit-messages",
+        "title": "커밋 메시지 규칙",
+        "content": "# 커밋 메시지 규칙\n\n## 기본 원칙\n- 기본은 한 줄 커밋(subject만)으로 간결하게 남긴다.\n- body / footer는 변경이 복잡하거나 배경 설명이 필요할 때만 덧붙인다.\n\n## 형식\n기본 (한 줄):\n```\n<type>(<scope>): <subject>\n```\n\n필요 시 확장:\n```\n<type>(<scope>): <subject>\n\n<body>\n\n<footer>\n```\n\n## 타입\n- feat: 새 기능\n- fix: 버그 수정\n- docs: 문서 변경\n- style: 코드 포맷\n- refactor: 리팩터링\n- test: 테스트\n- chore: 빌드 / 설정\n\n## 작성 규칙\n- subject는 50자 이내, 명령형 현재형(add, fix, update)을 쓴다.\n- body는 72자에서 줄바꿈하고, \"무엇\"보다 \"왜\" 중심으로 쓴다.\n- 큰 변경은 footer에 BREAKING CHANGE 표기 또는 관련 이슈 링크를 남긴다."
+      },
+      {
+        "id": "pr-safety",
+        "title": "PR / 브랜치 안전",
+        "content": "# PR / Branch Safety\n\n## 브랜치\n- 기능 브랜치에서 작업하고 `main`/`master`에는 PR로만 들어간다.\n- 브랜치 이름은 목적 접두사 사용: `feat/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`.\n\n## PR\n- 변경 요약과 테스트 방법을 본문에 적는다.\n- 리뷰 없이 머지하지 않는다.\n- CI 실패 상태의 PR을 머지하지 않는다.\n- 큰 PR은 가능한 경우 작은 단위로 분할한다.\n\n## 머지 전\n- 베이스 브랜치에서 최신 상태로 rebase 또는 merge 후 충돌을 해결.\n- 배포 영향이 있는 변경은 릴리즈 노트/CHANGELOG에 반영."
+      }
     ]
   },
   {
