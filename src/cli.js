@@ -13,7 +13,6 @@ const {
 const {
   getTargetPath,
   getDocsSkillPath,
-  getPackSkillPath,
   upsertManagedBlock,
   writeCursorFile,
 } = require('./filesystem');
@@ -107,14 +106,6 @@ function handleApply(args) {
         writeCursorFile(targetPath, packContent);
       } else {
         upsertManagedBlock(targetPath, packName, packContent);
-      }
-
-      if (shouldCreatePackSkill(packName, tool)) {
-        const skillPath = getPackSkillPath({ tool, scope, projectPath, packName });
-        if (skillPath) {
-          writeCursorFile(skillPath, renderPackSkillContent(packName, getSourcePacksForName(packName)));
-          console.log(`applied ${packName} skill -> ${skillPath}`);
-        }
       }
 
       if (packName === 'docs' && tool !== 'cursor') {
@@ -237,10 +228,6 @@ function renderPackContentForTool(pack, tool, autoMode) {
   }
 
   return pack.content;
-}
-
-function shouldCreatePackSkill(packName, tool) {
-  return tool !== 'cursor' && ['react-ts', 'spring-boot'].includes(packName);
 }
 
 function validateScope(scope) {

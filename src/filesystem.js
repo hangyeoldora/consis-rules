@@ -68,24 +68,6 @@ function getDocsSkillPath({ tool, scope, projectPath }) {
   return null;
 }
 
-function getPackSkillPath({ tool, scope, projectPath, packName }) {
-  const homeDir = os.homedir();
-
-  if (tool === 'codex') {
-    return scope === 'global'
-      ? path.join(homeDir, '.agents', 'skills', packName, 'SKILL.md')
-      : path.join(projectPath, '.agents', 'skills', packName, 'SKILL.md');
-  }
-
-  if (tool === 'claude') {
-    return scope === 'global'
-      ? path.join(homeDir, '.claude', 'skills', packName, 'SKILL.md')
-      : path.join(projectPath, '.claude', 'skills', packName, 'SKILL.md');
-  }
-
-  return null;
-}
-
 function upsertManagedBlock(filePath, packName, content) {
   ensureDir(path.dirname(filePath));
   const startMarker = `<!-- consis-rules:start ${packName} -->`;
@@ -121,7 +103,6 @@ module.exports = {
   detectTools,
   getTargetPath,
   getDocsSkillPath,
-  getPackSkillPath,
   upsertManagedBlock,
   writeCursorFile,
 };

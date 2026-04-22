@@ -186,8 +186,8 @@
     "locale": "ko",
     "updatedAt": "2026-04-19",
     "title": "AI 지침 문서",
-    "description": "CLAUDE.md / AGENTS.md / Cursor rules 같은 AI 지침 문서를 관리하는 규칙",
-    "longDescription": "Claude, Codex, Cursor가 읽는 AI 지침 문서를 루트 라우터 + 하위 폴더 문서 + 필요 시 호출하는 skill 구조로 정리하고 유지하는 규칙입니다. 긴 절차는 상시 컨텍스트에 넣지 않고, 필요한 경우에만 skill로 호출합니다.",
+    "description": "CLAUDE.md / AGENTS.md / Cursor rules를 협업하기 쉬운 구조로 정리하는 규칙",
+    "longDescription": "Claude, Codex, Cursor가 읽는 AI 지침 문서를 루트 라우터, 하위 지침 문서, 필요 시 호출하는 문서 정리 skill 구조로 정리하고 유지하는 규칙입니다. 상시 적용돼야 하는 기술 규칙은 rules/지침 문서 계층에 두고, 긴 절차와 문서 리팩터링 가이드는 필요할 때만 호출하도록 분리합니다.",
     "scope": "stack",
     "tags": [
       "AI",
@@ -204,7 +204,7 @@
       {
         "id": "root-router",
         "title": "루트 문서는 짧은 라우터로 유지",
-        "content": "# 루트 AI 지침 문서\n\n## 규칙\n- 루트 `AGENTS.md`와 `CLAUDE.md`는 200줄 이하로 유지한다.\n- 루트에는 프로젝트 전체에 적용되는 공통 규칙만 둔다.\n- 루트 문서에는 명령, 아키텍처 지도, 하위 문서 링크, 검증 기준만 둔다.\n- 긴 절차성 안내는 루트 문서가 아니라 skill reference 또는 `docs/`에 둔다."
+        "content": "# 루트 AI 지침 문서\n\n## 규칙\n- 루트 `AGENTS.md`와 `CLAUDE.md`는 200줄 이하로 유지한다.\n- 루트에는 프로젝트 전체에 적용되는 공통 규칙과 라우팅만 둔다.\n- 루트 문서에는 명령, 아키텍처 지도, 하위 문서 링크, 검증 기준만 둔다.\n- 상시 적용돼야 하는 기술 규칙은 하위 지침 문서나 rules 파일로 분리하고, 긴 절차성 안내는 skill reference 또는 `docs/`에 둔다."
       },
       {
         "id": "scoped-files",
@@ -213,8 +213,8 @@
       },
       {
         "id": "skill-only-workflows",
-        "title": "긴 절차는 skill로 분리",
-        "content": "# Skill 기반 절차\n\nAI 지침 문서 정리처럼 긴 절차는 루트 `CLAUDE.md` / `AGENTS.md`에 상시 포함하지 않는다.\n\n## Claude\n- `.claude/skills/ai-instructions/SKILL.md`\n- 필요할 때 `/ai-instructions`로 호출한다.\n\n## Codex\n- `.agents/skills/ai-instructions/SKILL.md`\n- 필요할 때 `$ai-instructions`로 호출한다.\n\n루트 문서에는 skill 위치와 호출 방법만 짧게 안내한다."
+        "title": "문서 정리 절차만 skill로 분리",
+        "content": "# 문서 정리 Skill\n\nAI 지침 문서 정리와 리팩터링처럼 긴 절차는 루트 `CLAUDE.md` / `AGENTS.md`에 상시 포함하지 않는다.\n\n## 상시 규칙\n- React, Spring 같은 기술 규칙은 rules 또는 하위 지침 문서 계층에 둔다.\n- 공통 규칙과 안전 규칙은 항상 적용되는 문서에 둔다.\n\n## 호출형 절차\n- 문서 구조 정리, 루트 문서 슬림화, 하위 문서 재배치는 skill로 분리한다.\n\n## Claude\n- `.claude/skills/ai-instructions/SKILL.md`\n- 필요할 때 `/ai-instructions`로 호출한다.\n\n## Codex\n- `.agents/skills/ai-instructions/SKILL.md`\n- 필요할 때 `$ai-instructions`로 호출한다.\n\n루트 문서에는 skill 위치와 호출 방법만 짧게 안내한다."
       },
       {
         "id": "korean-language",

@@ -88,43 +88,37 @@ function renderPackContent(name, packs) {
 }
 
 function renderReactTsRootContent(tool) {
-  const command = tool === 'codex' ? '$react-ts' : '/react-ts';
-  const skillPath = tool === 'codex'
-    ? '.agents/skills/react-ts/SKILL.md'
-    : '.claude/skills/react-ts/SKILL.md';
-
   const lines = [
     '# Consis Rules: react-ts',
     '',
-    '## 프론트엔드 기본 라우팅',
+    '## 프론트엔드 상시 규칙',
     '- 이 저장소의 프론트엔드 관련 작업은 React + TypeScript 기준으로 진행한다.',
     '- 기본 스택은 React 18, TypeScript strict, Tailwind, React Query, Zustand를 따른다.',
-    '- 컴포넌트 구조, 렌더링 안전, 상태 관리 세부 규칙은 react-ts skill reference를 따른다.',
+    '- 라우팅은 `react-router-dom` 기준으로 정리하고, 인라인 라우트 정의를 피한다.',
+    '- 상태 관리는 전역 상태와 서버 상태의 책임을 분리한다.',
+    '- 컴포넌트는 단일 책임을 유지하고, 렌더링 중 상태 변경을 금지한다.',
+    '- 스타일은 Tailwind 중심으로 일관되게 유지하고 스타일링 시스템 혼용을 피한다.',
+    '- 폴더 구조, 훅 규칙, 렌더링 안전, UI 세부 기준은 이 규칙 블록을 상시 기준으로 해석한다.',
     '',
-    '## Skill 위치 및 호출',
-    `- Skill 파일: \`${skillPath}\``,
-    `- 호출 명령: \`${command}\``,
+    '## 적용 방식',
+    '- 이 규칙은 필요할 때 호출하는 skill이 아니라, 프론트 작업 전반에 항상 적용되는 기본 규칙이다.',
   ];
 
   return `${lines.join('\n').trim()}\n`;
 }
 
 function renderSpringBootRootContent(tool) {
-  const command = tool === 'codex' ? '$spring-boot' : '/spring-boot';
-  const skillPath = tool === 'codex'
-    ? '.agents/skills/spring-boot/SKILL.md'
-    : '.claude/skills/spring-boot/SKILL.md';
-
   const lines = [
     '# Consis Rules: spring-boot',
     '',
-    '## 백엔드 기본 라우팅',
+    '## 백엔드 상시 규칙',
     '- 이 저장소의 Spring Boot 관련 작업은 레이어드 아키텍처와 REST API 규칙을 기본으로 따른다.',
-    '- 보안, 트랜잭션, 테스트 세부 규칙은 spring-boot skill reference를 따른다.',
+    '- Controller → Service → Repository 단방향 구조와 DTO 경계를 유지한다.',
+    '- 입력 검증, 인증/인가, SQL 인젝션 방지 같은 보안 기준을 기본값으로 적용한다.',
+    '- 트랜잭션 경계, 테스트 전략, 에러 응답 형식을 일관되게 유지한다.',
     '',
-    '## Skill 위치 및 호출',
-    `- Skill 파일: \`${skillPath}\``,
-    `- 호출 명령: \`${command}\``,
+    '## 적용 방식',
+    '- 이 규칙은 필요할 때 호출하는 skill이 아니라, Spring Boot 작업 전반에 항상 적용되는 기본 규칙이다.',
   ];
 
   return `${lines.join('\n').trim()}\n`;
@@ -140,7 +134,8 @@ function renderDocsRootContent(tool, { autoMode = false } = {}) {
     '',
     '## AI 지침 문서 운영 원칙',
     '- 루트 `AGENTS.md`와 `CLAUDE.md`는 짧은 라우터 문서로 유지한다.',
-    '- 긴 절차와 상세 레퍼런스는 skill 폴더로 분리한다.',
+    '- 상시 적용돼야 하는 기술 규칙은 루트 또는 하위 rules/지침 문서 계층에 둔다.',
+    '- 긴 절차와 문서 정리 플레이북만 skill 폴더로 분리한다.',
     '- 하위 문서는 실제 코드 책임이 있는 디렉터리 가까이에 둔다.',
     '- 기본 응답 언어는 한국어로 유지한다.',
     '',
@@ -152,8 +147,8 @@ function renderDocsRootContent(tool, { autoMode = false } = {}) {
   if (autoMode) {
     lines.push('');
     lines.push('## Auto 모드 안내');
-    lines.push(`- 이 프로젝트는 \`${command}\` skill 호출을 전제로 문서 구조를 유지한다.`);
-    lines.push('- 루트 문서에는 짧은 규칙만 두고, 긴 절차는 skill reference로 분리한다.');
+    lines.push(`- 이 프로젝트는 필요할 때 \`${command}\`로 문서 구조를 정리하는 흐름을 사용한다.`);
+    lines.push('- 루트 문서에는 짧은 규칙만 두고, 긴 절차와 문서 리팩터링 가이드는 skill reference로 분리한다.');
   }
 
   return `${lines.join('\n').trim()}\n`;
@@ -195,9 +190,7 @@ function normalizeSkillRuleContent(content) {
 
 function getSkillDescription(skillName) {
   const descriptions = {
-    'ai-instructions': 'Organize AGENTS.md and CLAUDE.md into short router documents and keep detailed AI guidance in nearby skills or sub-documents.',
-    'react-ts': 'Apply React and TypeScript frontend standards for components, hooks, rendering safety, Tailwind, and project structure.',
-    'spring-boot': 'Apply Spring Boot backend standards for architecture, REST APIs, security, transactions, and testing.',
+    'ai-instructions': 'Refactor AGENTS.md, CLAUDE.md, and Cursor rules into short router documents plus nearby scoped rule documents and on-demand workflow guides.',
   };
 
   return descriptions[skillName] || `Use the ${skillName} workflow when its named domain applies.`;

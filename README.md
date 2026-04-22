@@ -2,6 +2,7 @@
 
 Claude, Codex, Cursor에서 팀 협업용 AI 규칙을 빠르게 맞추는 CLI입니다.
 바이브 코딩을 하더라도 프로젝트별 규칙, 문서 구조, 공통 작업 방식이 흔들리지 않게 세팅하는 용도에 맞춰져 있습니다.
+새 프로젝트를 시작할 때뿐 아니라, 이미 문서와 코드가 있는 기존 프로젝트에서도 규칙을 다시 정리하고 협업 친화적으로 리팩토링 방향을 잡는 데 사용할 수 있습니다.
 
 ## 설치
 
@@ -26,8 +27,7 @@ consis-rules react-ts --auto
 
 기본값은 `claude`이며, 아래를 세팅합니다.
 
-- 루트 `CLAUDE.md`에 짧은 React + TypeScript 라우터 추가
-- `.claude/skills/react-ts/SKILL.md` 생성
+- 루트 `CLAUDE.md`에 React + TypeScript 상시 규칙 추가
 - `docs`도 함께 적용
 - `.claude/skills/ai-instructions/SKILL.md` 생성
 
@@ -52,7 +52,7 @@ consis-rules docs
 - `CLAUDE.md`
 - `.claude/skills/ai-instructions/SKILL.md`
 
-루트 문서에는 짧은 라우팅만 들어가고, 자세한 규칙은 skill 파일로 분리됩니다.
+루트 문서에는 짧은 운영 원칙만 들어가고, 문서 구조를 다시 정리해야 할 때만 `ai-instructions` skill을 호출합니다.
 
 ## 전역 적용
 
@@ -106,9 +106,9 @@ consis-rules react-ts --auto
 
 | Pack | 기본 scope | 설명 |
 | --- | --- | --- |
-| `react-ts` | `project` | React + TypeScript 프론트 규칙 |
+| `react-ts` | `project` | React + TypeScript 프론트 상시 규칙 |
 | `docs` | `project` | 루트 문서 라우팅 + AI 문서 구조 skill |
-| `spring-boot` | `project` | Spring Boot 백엔드 규칙 |
+| `spring-boot` | `project` | Spring Boot 백엔드 상시 규칙 |
 | `common` | `global` | 공통 기본 규칙 |
 | `safety` | `global` | 파괴적 명령, Git, 로그 안전 규칙 |
 
@@ -127,18 +127,18 @@ consis-rules react-ts --auto
 
 | Pack | 루트 문서 | Skill 파일 |
 | --- | --- | --- |
-| `react-ts` | 요약 라우팅만 추가 | 생성 |
-| `spring-boot` | 요약 라우팅만 추가 | 생성 |
+| `react-ts` | 상시 규칙 요약 추가 | 없음 |
+| `spring-boot` | 상시 규칙 요약 추가 | 없음 |
 | `docs` | 짧은 문서 구조 규칙 추가 | 생성 |
 | `common` | 직접 본문 추가 | 없음 |
 | `safety` | 직접 본문 추가 | 없음 |
 
-`react-ts`, `spring-boot`, `docs`는 긴 내용을 루트에 다 넣지 않고, 가능한 한 skill reference로 분리합니다.
+`react-ts`와 `spring-boot`는 필요할 때만 부르는 skill이 아니라, 해당 스택 작업에 항상 적용되는 규칙으로 취급합니다. `docs`만 문서 구조 정리용 skill을 함께 생성합니다.
 
 ## 공식 문서 기준 정리
 
 - Claude: 프로젝트 규칙은 `CLAUDE.md` 또는 `.claude/CLAUDE.md`, 사용자 전역 규칙은 `~/.claude/CLAUDE.md`
-- Claude: 긴 규칙은 `.claude/rules/`나 필요 시 호출하는 skill 쪽으로 분리하는 것이 공식 가이드와 잘 맞습니다
+- Claude: 상시 규칙은 `CLAUDE.md` 계층에 두고, 문서 정리 같은 절차형 작업만 필요 시 호출하는 command/skill로 분리하는 편이 자연스럽습니다
 - Codex: 저장소 안 `AGENTS.md`로 프로젝트 지침을 주는 방식이 공식 소개 문서와 맞습니다
 - Cursor: 프로젝트 규칙은 `.cursor/rules`, 전역 규칙은 `Cursor Settings > Rules`가 공식 방식입니다
 
