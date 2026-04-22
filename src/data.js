@@ -88,49 +88,13 @@ function renderPackContent(name, packs) {
   return `${lines.join('\n').trim()}\n`;
 }
 
-function renderReactTsRootContent(tool) {
-  const lines = [
-    '# Consis Rules: react-ts',
-    '',
-    '## 프론트엔드 상시 규칙',
-    '- 이 저장소의 프론트엔드 관련 작업은 React + TypeScript 기준으로 진행한다.',
-    '- 기본 스택은 React 18, TypeScript strict, Tailwind, React Query, Zustand를 따른다.',
-    '- 라우팅은 `react-router-dom` 기준으로 정리하고, 인라인 라우트 정의를 피한다.',
-    '- 상태 관리는 전역 상태와 서버 상태의 책임을 분리한다.',
-    '- 컴포넌트는 단일 책임을 유지하고, 렌더링 중 상태 변경을 금지한다.',
-    '- 스타일은 Tailwind 중심으로 일관되게 유지하고 스타일링 시스템 혼용을 피한다.',
-    '- 폴더 구조, 훅 규칙, 렌더링 안전, UI 세부 기준은 이 규칙 블록을 상시 기준으로 해석한다.',
-    '',
-    '## 적용 방식',
-    '- 이 규칙은 필요할 때 호출하는 skill이 아니라, 프론트 작업 전반에 항상 적용되는 기본 규칙이다.',
-  ];
-
-  if (tool === 'claude') {
-    lines.push('- 상세 규칙은 `.claude/rules/react-ts.md` 파일에 저장되며, Claude Code가 모든 세션에 자동 로드한다.');
-  }
-
-  return `${lines.join('\n').trim()}\n`;
+// Claude 전용 요약 — .claude/rules/*.md는 자동 로드되므로 루트에는 포인터만 남긴다.
+function renderReactTsRootContent() {
+  return '# Consis Rules: react-ts\n\n- 프론트엔드 상시 규칙: `@.claude/rules/react-ts.md` (Claude Code가 세션마다 자동 로드).\n';
 }
 
-function renderSpringBootRootContent(tool) {
-  const lines = [
-    '# Consis Rules: spring-boot',
-    '',
-    '## 백엔드 상시 규칙',
-    '- 이 저장소의 Spring Boot 관련 작업은 레이어드 아키텍처와 REST API 규칙을 기본으로 따른다.',
-    '- Controller → Service → Repository 단방향 구조와 DTO 경계를 유지한다.',
-    '- 입력 검증, 인증/인가, SQL 인젝션 방지 같은 보안 기준을 기본값으로 적용한다.',
-    '- 트랜잭션 경계, 테스트 전략, 에러 응답 형식을 일관되게 유지한다.',
-    '',
-    '## 적용 방식',
-    '- 이 규칙은 필요할 때 호출하는 skill이 아니라, Spring Boot 작업 전반에 항상 적용되는 기본 규칙이다.',
-  ];
-
-  if (tool === 'claude') {
-    lines.push('- 상세 규칙은 `.claude/rules/spring-boot.md` 파일에 저장되며, Claude Code가 모든 세션에 자동 로드한다.');
-  }
-
-  return `${lines.join('\n').trim()}\n`;
+function renderSpringBootRootContent() {
+  return '# Consis Rules: spring-boot\n\n- 백엔드 상시 규칙: `@.claude/rules/spring-boot.md` (Claude Code가 세션마다 자동 로드).\n';
 }
 
 function renderDocsRootContent(tool, { autoMode = false } = {}) {

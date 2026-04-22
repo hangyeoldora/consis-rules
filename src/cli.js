@@ -242,13 +242,13 @@ function renderPackContentForTool(pack, tool, autoMode) {
   }
 
   // Claude는 .claude/rules/<pack>.md에 풀 내용이 별도 저장되므로
-  // 루트 CLAUDE.md에는 짧은 요약만 둔다.
+  // 루트 CLAUDE.md에는 1줄 포인터만 둔다.
   if (pack.name === 'react-ts' && tool === 'claude') {
-    return renderReactTsRootContent(tool);
+    return renderReactTsRootContent();
   }
 
   if (pack.name === 'spring-boot' && tool === 'claude') {
-    return renderSpringBootRootContent(tool);
+    return renderSpringBootRootContent();
   }
 
   // Codex는 rules 폴더 개념이 공식에 없어 AGENTS.md에 풀 내용을 둔다.
