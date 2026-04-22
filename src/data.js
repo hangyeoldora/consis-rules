@@ -164,7 +164,14 @@ function renderDocsSkillContent(packs) {
 }
 
 function renderPackSkillContent(skillName, packs) {
-  const lines = [`# ${skillName}`];
+  const lines = [
+    '---',
+    `name: ${skillName}`,
+    `description: ${getSkillDescription(skillName)}`,
+    '---',
+    '',
+    `# ${skillName}`,
+  ];
 
   for (const pack of packs) {
     lines.push('');
@@ -184,6 +191,16 @@ function normalizeSkillRuleContent(content) {
   const withoutTopHeading = lines[0]?.startsWith('# ') ? lines.slice(1) : lines;
   const normalized = withoutTopHeading.join('\n').replace(/^\n+/, '').replace(/\n{3,}/g, '\n\n');
   return normalized.trim();
+}
+
+function getSkillDescription(skillName) {
+  const descriptions = {
+    'ai-instructions': 'Organize AGENTS.md and CLAUDE.md into short router documents and keep detailed AI guidance in nearby skills or sub-documents.',
+    'react-ts': 'Apply React and TypeScript frontend standards for components, hooks, rendering safety, Tailwind, and project structure.',
+    'spring-boot': 'Apply Spring Boot backend standards for architecture, REST APIs, security, transactions, and testing.',
+  };
+
+  return descriptions[skillName] || `Use the ${skillName} workflow when its named domain applies.`;
 }
 
 function resolvePackName(input) {
