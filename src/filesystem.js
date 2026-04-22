@@ -68,6 +68,18 @@ function getDocsSkillPath({ tool, scope, projectPath }) {
   return null;
 }
 
+function getPackRulesPath({ tool, scope, projectPath, packName }) {
+  const homeDir = os.homedir();
+
+  if (tool === 'claude') {
+    return scope === 'global'
+      ? path.join(homeDir, '.claude', 'rules', `${packName}.md`)
+      : path.join(projectPath, '.claude', 'rules', `${packName}.md`);
+  }
+
+  return null;
+}
+
 function upsertManagedBlock(filePath, packName, content) {
   ensureDir(path.dirname(filePath));
   const startMarker = `<!-- ai-team-rules:start ${packName} -->`;
@@ -103,6 +115,7 @@ module.exports = {
   detectTools,
   getTargetPath,
   getDocsSkillPath,
+  getPackRulesPath,
   upsertManagedBlock,
   writeCursorFile,
 };

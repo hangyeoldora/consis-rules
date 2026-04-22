@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 
 const { run } = require('../src/cli');
 
-test('apply codex project writes AGENTS.md managed blocks', async () => {
+test('apply codex project writes full stack rules inline into AGENTS.md', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-project-'));
 
   await run(['apply', 'common', 'react-ts', '--tool', 'codex', '--scope', 'project', '--project-path', projectDir]);
@@ -15,9 +15,33 @@ test('apply codex project writes AGENTS.md managed blocks', async () => {
   const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
   assert.match(output, /ai-team-rules:start common/);
   assert.match(output, /ai-team-rules:start react-ts/);
-  assert.match(output, /프론트엔드 상시 규칙/);
+  // Codex는 공식 rules 폴더가 없으므로 풀 내용이 AGENTS.md에 직접 들어간다.
+  assert.match(output, /React \+ TypeScript/);
+  assert.match(output, /스택 \/ 라이브러리 표준/);
+  assert.doesNotMatch(output, /프론트엔드 상시 규칙/);
   assert.doesNotMatch(output, /\$react-ts/);
   assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'react-ts', 'SKILL.md')), false);
+  assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'rules', 'react-ts.md')), false);
+});
+
+test('apply claude project writes summary in CLAUDE.md and full rules to .claude/rules', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-claude-rules-'));
+
+  await run(['apply', 'react-ts', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+
+  const rootOutput = fs.readFileSync(path.join(projectDir, 'CLAUDE.md'), 'utf8');
+  assert.match(rootOutput, /ai-team-rules:start react-ts/);
+  assert.match(rootOutput, /프론트엔드 상시 규칙/);
+  assert.match(rootOutput, /\.claude\/rules\/react-ts\.md/);
+  assert.doesNotMatch(rootOutput, /스택 \/ 라이브러리 표준/);
+
+  const rulesPath = path.join(projectDir, '.claude', 'rules', 'react-ts.md');
+  assert.equal(fs.existsSync(rulesPath), true);
+  const rulesOutput = fs.readFileSync(rulesPath, 'utf8');
+  assert.match(rulesOutput, /React \+ TypeScript/);
+  assert.match(rulesOutput, /스택 \/ 라이브러리 표준/);
+
+  assert.equal(fs.existsSync(path.join(projectDir, '.claude', 'skills', 'react-ts', 'SKILL.md')), false);
 });
 
 test('apply cursor project writes one file per pack', async () => {
@@ -60,7 +84,7 @@ test('apply spring alias resolves to spring-boot pack', async () => {
   await run(['apply', 'spring', '--tool', 'codex', '--scope', 'project', '--project-path', projectDir]);
 
   const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
-  assert.match(output, /spring-boot|Spring Boot|백엔드 상시 규칙/);
+  assert.match(output, /spring-boot|Spring Boot/);
   assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'spring-boot', 'SKILL.md')), false);
 });
 
@@ -76,6 +100,7 @@ test('auto mode adds docs but not common for default claude target', async () =>
   assert.match(claudeOutput, /\/ai-instructions/);
   assert.match(claudeOutput, /프론트엔드 상시 규칙/);
   assert.equal(fs.existsSync(path.join(projectDir, '.claude', 'skills', 'react-ts', 'SKILL.md')), false);
+  assert.equal(fs.existsSync(path.join(projectDir, '.claude', 'rules', 'react-ts.md')), true);
   assert.equal(fs.existsSync(path.join(projectDir, '.claude', 'skills', 'ai-instructions', 'SKILL.md')), true);
 });
 
@@ -88,7 +113,7 @@ test('auto mode with codex writes codex docs hint and skill file', async () => {
   assert.match(agentsOutput, /ai-team-rules:start spring-boot/);
   assert.match(agentsOutput, /ai-team-rules:start docs/);
   assert.match(agentsOutput, /\$ai-instructions/);
-  assert.match(agentsOutput, /백엔드 상시 규칙/);
+  assert.match(agentsOutput, /Spring Boot/);
   assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'spring-boot', 'SKILL.md')), false);
   assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'ai-instructions', 'SKILL.md')), true);
 });

@@ -13,6 +13,7 @@ const {
 const {
   getTargetPath,
   getDocsSkillPath,
+  getPackRulesPath,
   upsertManagedBlock,
   writeCursorFile,
 } = require('./filesystem');
@@ -111,6 +112,14 @@ async function handleApply(sourceState, args) {
         writeCursorFile(targetPath, packContent);
       } else {
         upsertManagedBlock(targetPath, packName, packContent);
+      }
+
+      if (shouldCreateRulesFile(packName, tool)) {
+        const rulesPath = getPackRulesPath({ tool, scope, projectPath, packName });
+        if (rulesPath) {
+          writeCursorFile(rulesPath, pack.content);
+          console.log(`applied ${packName} rules -> ${rulesPath}`);
+        }
       }
 
       if (packName === 'docs' && tool !== 'cursor') {
@@ -232,19 +241,26 @@ function renderPackContentForTool(pack, tool, autoMode) {
     return renderCursorRuleContent(pack.name, pack.content);
   }
 
-  if (pack.name === 'react-ts' && tool !== 'cursor') {
+  // Claude는 .claude/rules/<pack>.md에 풀 내용이 별도 저장되므로
+  // 루트 CLAUDE.md에는 짧은 요약만 둔다.
+  if (pack.name === 'react-ts' && tool === 'claude') {
     return renderReactTsRootContent(tool);
   }
 
-  if (pack.name === 'spring-boot' && tool !== 'cursor') {
+  if (pack.name === 'spring-boot' && tool === 'claude') {
     return renderSpringBootRootContent(tool);
   }
 
+  // Codex는 rules 폴더 개념이 공식에 없어 AGENTS.md에 풀 내용을 둔다.
   if (pack.name === 'docs' && tool !== 'cursor') {
     return renderDocsRootContent(tool, { autoMode });
   }
 
   return pack.content;
+}
+
+function shouldCreateRulesFile(packName, tool) {
+  return tool === 'claude' && ['react-ts', 'spring-boot'].includes(packName);
 }
 
 function validateScope(scope) {

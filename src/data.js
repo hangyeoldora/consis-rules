@@ -105,6 +105,10 @@ function renderReactTsRootContent(tool) {
     '- 이 규칙은 필요할 때 호출하는 skill이 아니라, 프론트 작업 전반에 항상 적용되는 기본 규칙이다.',
   ];
 
+  if (tool === 'claude') {
+    lines.push('- 상세 규칙은 `.claude/rules/react-ts.md` 파일에 저장되며, Claude Code가 모든 세션에 자동 로드한다.');
+  }
+
   return `${lines.join('\n').trim()}\n`;
 }
 
@@ -121,6 +125,10 @@ function renderSpringBootRootContent(tool) {
     '## 적용 방식',
     '- 이 규칙은 필요할 때 호출하는 skill이 아니라, Spring Boot 작업 전반에 항상 적용되는 기본 규칙이다.',
   ];
+
+  if (tool === 'claude') {
+    lines.push('- 상세 규칙은 `.claude/rules/spring-boot.md` 파일에 저장되며, Claude Code가 모든 세션에 자동 로드한다.');
+  }
 
   return `${lines.join('\n').trim()}\n`;
 }
