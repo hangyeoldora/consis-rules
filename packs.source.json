@@ -84,8 +84,8 @@
     "locale": "ko",
     "updatedAt": "2026-04-19",
     "title": "React + TypeScript",
-    "description": "Consis 사내 React 프로젝트 표준 — 스택·구조·컴포넌트·UI·렌더링 안전·코드 품질",
-    "longDescription": "Consis 사내 React/TypeScript 프로젝트 공통 표준입니다. 실제 회사 프로젝트(aicfo2_mono, system-admin-front, weai-front-admin, weai-main-chat-front)의 공통 스택과 구조를 고정하여, 누가 AI로 작업하더라도 아키텍처·라이브러리·UI 스타일링·린팅·패턴이 일관되도록 강제합니다.",
+    "description": "React + TypeScript 팀 작업 규칙 — 스택·구조·컴포넌트·UI·렌더링 안전·코드 품질",
+    "longDescription": "React/TypeScript 프로젝트에서 Claude, Codex, Cursor로 함께 작업할 때 스택, 구조, 상태 관리, UI 스타일링, 렌더링 안전, 코드 품질 기준을 일관되게 맞추기 위한 규칙입니다.",
     "scope": "stack",
     "tags": [
       "react",

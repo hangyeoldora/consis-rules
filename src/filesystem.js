@@ -40,9 +40,11 @@ function getTargetPath({ tool, scope, projectPath, packName }) {
   }
 
   if (tool === 'cursor') {
-    return scope === 'global'
-      ? path.join(homeDir, '.cursor', 'rules', `consis-${packName}.mdc`)
-      : path.join(projectPath, '.cursor', 'rules', `consis-${packName}.mdc`);
+    if (scope === 'global') {
+      throw new Error('Cursor global rules are officially managed in Cursor Settings > Rules as plain text user rules. This CLI currently supports Cursor project rules only.');
+    }
+
+    return path.join(projectPath, '.cursor', 'rules', `consis-${packName}.mdc`);
   }
 
   throw new Error(`Unsupported tool: ${tool}`);

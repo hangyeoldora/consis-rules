@@ -1,6 +1,7 @@
 # consis-rules
 
-Consis AI 규칙 팩을 Claude, Codex, Cursor 프로젝트에 적용하는 CLI입니다.
+Claude, Codex, Cursor에서 팀 협업용 AI 규칙을 빠르게 맞추는 CLI입니다.
+바이브 코딩을 하더라도 프로젝트별 규칙, 문서 구조, 공통 작업 방식이 흔들리지 않게 세팅하는 용도에 맞춰져 있습니다.
 
 ## 설치
 
@@ -17,20 +18,20 @@ npm link
 
 ## 먼저: react-ts
 
-프론트 프로젝트라면 보통 아래 명령부터 쓰면 됩니다.
+프론트 프로젝트라면 보통 아래 명령부터 시작하면 됩니다.
 
 ```bash
 consis-rules react-ts --auto
 ```
 
-이 명령은 기본적으로 `claude` 기준으로 아래를 세팅합니다.
+기본값은 `claude`이며, 아래를 세팅합니다.
 
-- 루트 `CLAUDE.md`에 React + TypeScript 라우팅 요약 추가
+- 루트 `CLAUDE.md`에 짧은 React + TypeScript 라우터 추가
 - `.claude/skills/react-ts/SKILL.md` 생성
 - `docs`도 함께 적용
 - `.claude/skills/ai-instructions/SKILL.md` 생성
 
-세팅 후에는 문서 구조를 자동으로 정리하거나 점검할 일이 생기면 `/ai-instructions`를 사용하면 됩니다.
+세팅 후 문서 구조를 자동으로 정리하거나 점검하고 싶을 때는 `/ai-instructions`를 실행하면 됩니다.
 
 Codex 기준으로 넣고 싶으면:
 
@@ -46,7 +47,7 @@ consis-rules react-ts --auto --tool codex
 consis-rules docs
 ```
 
-기본값은 `claude`입니다. 이 경우 대략 아래가 만들어집니다.
+기본값은 `claude`입니다. 이 경우 아래 구성이 생깁니다.
 
 - `CLAUDE.md`
 - `.claude/skills/ai-instructions/SKILL.md`
@@ -71,7 +72,9 @@ consis-rules react-ts --auto --tool codex --scope global
 | --- | --- |
 | `claude` | `~/.claude/CLAUDE.md` |
 | `codex` | `~/.codex/AGENTS.md` |
-| `cursor` | `~/.cursor/rules/consis-<pack>.mdc` |
+| `cursor` | CLI 미지원, 공식 권장 방식은 `Cursor Settings > Rules` |
+
+Cursor는 공식 문서 기준으로 전역 규칙을 파일이 아니라 Settings의 User Rules로 관리합니다. 그래서 이 CLI는 Cursor 전역 규칙 파일을 억지로 만들지 않고, 프로젝트 규칙만 `.cursor/rules/`에 생성합니다.
 
 ## 명령어
 
@@ -131,3 +134,16 @@ consis-rules react-ts --auto
 | `safety` | 직접 본문 추가 | 없음 |
 
 `react-ts`, `spring-boot`, `docs`는 긴 내용을 루트에 다 넣지 않고, 가능한 한 skill reference로 분리합니다.
+
+## 공식 문서 기준 정리
+
+- Claude: 프로젝트 규칙은 `CLAUDE.md` 또는 `.claude/CLAUDE.md`, 사용자 전역 규칙은 `~/.claude/CLAUDE.md`
+- Claude: 긴 규칙은 `.claude/rules/`나 필요 시 호출하는 skill 쪽으로 분리하는 것이 공식 가이드와 잘 맞습니다
+- Codex: 저장소 안 `AGENTS.md`로 프로젝트 지침을 주는 방식이 공식 소개 문서와 맞습니다
+- Cursor: 프로젝트 규칙은 `.cursor/rules`, 전역 규칙은 `Cursor Settings > Rules`가 공식 방식입니다
+
+참고:
+
+- [Anthropic Claude Code memory docs](https://code.claude.com/docs/en/memory)
+- [OpenAI Introducing Codex](https://openai.com/index/introducing-codex/)
+- [Cursor Rules docs](https://docs.cursor.com/en/context/rules)

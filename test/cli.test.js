@@ -30,6 +30,15 @@ test('apply cursor project writes one file per pack', async () => {
   assert.match(output, /AI 지침 문서/);
 });
 
+test('apply cursor global throws official settings guidance error', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-cursor-global-'));
+
+  await assert.rejects(
+    () => run(['apply', 'docs', '--tool', 'cursor', '--scope', 'global', '--project-path', projectDir]),
+    /Cursor Settings > Rules/
+  );
+});
+
 test('apply without --tool defaults to claude only', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-default-'));
 
