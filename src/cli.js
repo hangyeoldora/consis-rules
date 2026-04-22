@@ -16,53 +16,58 @@ const {
   upsertManagedBlock,
   writeCursorFile,
 } = require('./filesystem');
+const { DEFAULT_SOURCE_URL, loadSourcePacks } = require('./source-loader');
 
 async function run(argv) {
+  const sourceState = await loadSourcePacks({
+    sourceUrl: extractSourceUrl(argv),
+  });
   const [command, ...rest] = argv;
 
   if (!command || command === 'help' || command === '--help' || command === '-h') {
     printHelp();
+    printSourceNotice(sourceState);
     return;
   }
 
-  if (resolvePackName(command) && getPackMap()[resolvePackName(command)]) {
-    handleApply([command, ...rest]);
+  if (resolvePackName(command) && getPackMap(sourceState.sourcePacks)[resolvePackName(command)]) {
+    await handleApply(sourceState, [command, ...rest]);
     return;
   }
 
   if (command === 'list') {
-    handleList();
+    handleList(sourceState);
     return;
   }
 
   if (command === 'show') {
-    handleShow(rest);
+    handleShow(sourceState, rest);
     return;
   }
 
   if (command === 'apply') {
-    handleApply(rest);
+    await handleApply(sourceState, rest);
     return;
   }
 
   throw new Error(`Unknown command: ${command}`);
 }
 
-function handleList() {
-  const packs = getPackDefinitions();
+function handleList(sourceState) {
+  const packs = getPackDefinitions(sourceState.sourcePacks);
 
   for (const pack of packs) {
     console.log(`${pack.name}\t${pack.defaultScope}\t${pack.ruleCount} rules\t${pack.description}`);
   }
 }
 
-function handleShow(args) {
+function handleShow(sourceState, args) {
   const packName = resolvePackName(args[0]);
   if (!packName) {
     throw new Error('Usage: ai-team-rules show <pack>');
   }
 
-  const pack = getPackMap()[packName];
+  const pack = getPackMap(sourceState.sourcePacks)[packName];
   if (!pack) {
     throw new Error(`Unknown pack: ${packName}`);
   }
@@ -70,9 +75,9 @@ function handleShow(args) {
   console.log(pack.content);
 }
 
-function handleApply(args) {
+async function handleApply(sourceState, args) {
   const parsed = parseApplyArgs(args);
-  const packMap = getPackMap();
+  const packMap = getPackMap(sourceState.sourcePacks);
   const normalizedPackNames = expandPackNames(parsed.packNames.map(resolvePackName), parsed.autoMode);
   const unknownPacks = normalizedPackNames.filter((name) => !packMap[name]);
 
@@ -111,7 +116,7 @@ function handleApply(args) {
       if (packName === 'docs' && tool !== 'cursor') {
         const skillPath = getDocsSkillPath({ tool, scope, projectPath });
         if (skillPath) {
-          writeCursorFile(skillPath, renderDocsSkillContent(getSourcePacksForName('docs')));
+          writeCursorFile(skillPath, renderDocsSkillContent(getSourcePacksForName(sourceState.sourcePacks, 'docs')));
           console.log(`applied ${packName} skill -> ${skillPath}`);
         }
       }
@@ -126,6 +131,7 @@ function parseApplyArgs(args) {
   const tools = [];
   let scope = null;
   let projectPath = null;
+  let sourceUrl = null;
   let autoMode = false;
 
   for (let index = 0; index < args.length; index += 1) {
@@ -154,6 +160,12 @@ function parseApplyArgs(args) {
       continue;
     }
 
+    if (token === '--source-url') {
+      sourceUrl = args[index + 1];
+      index += 1;
+      continue;
+    }
+
     packNames.push(token);
   }
 
@@ -162,6 +174,7 @@ function parseApplyArgs(args) {
     tools,
     scope,
     projectPath,
+    sourceUrl,
     autoMode,
   };
 }
@@ -171,10 +184,10 @@ function inferDefaultScope(packNames, packMap) {
   return defaults.every((scope) => scope === 'global') ? 'global' : 'project';
 }
 
-function getPackMap() {
+function getPackMap(sourcePacks) {
   const entries = [];
 
-  for (const pack of getPackDefinitions()) {
+  for (const pack of getPackDefinitions(sourcePacks)) {
     entries.push([pack.name, pack]);
     for (const alias of pack.aliases || []) {
       entries.push([alias, pack]);
@@ -246,11 +259,34 @@ function printHelp() {
 Commands:
   ai-team-rules list
   ai-team-rules show <pack>
-  ai-team-rules apply <pack...> [--auto] [--tool codex|claude|cursor|all] [--scope global|project] [--project-path path]
+  ai-team-rules apply <pack...> [--auto] [--tool codex|claude|cursor|all] [--scope global|project] [--project-path path] [--source-url url]
 
 Packs:
   ${PACK_ORDER.join(', ')}
 `);
+}
+
+function printSourceNotice(sourceState) {
+  if (sourceState.sourceType === 'remote') {
+    console.log(`\nSource: remote (${sourceState.sourceUrl})`);
+    return;
+  }
+
+  if (sourceState.fallbackReason) {
+    console.log(`\nSource: local fallback (${sourceState.fallbackReason})`);
+  } else {
+    console.log('\nSource: local');
+  }
+}
+
+function extractSourceUrl(argv) {
+  for (let index = 0; index < argv.length; index += 1) {
+    if (argv[index] === '--source-url') {
+      return argv[index + 1] || DEFAULT_SOURCE_URL;
+    }
+  }
+
+  return null;
 }
 
 module.exports = {

@@ -1,6 +1,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const http = require('http');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
@@ -90,4 +91,57 @@ test('auto mode with codex writes codex docs hint and skill file', async () => {
   assert.match(agentsOutput, /백엔드 상시 규칙/);
   assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'spring-boot', 'SKILL.md')), false);
   assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'ai-instructions', 'SKILL.md')), true);
+});
+
+test('list can load packs from remote directory json', async () => {
+  const payload = JSON.stringify([
+    {
+      id: 'ai-base-rules',
+      title: 'AI 기본 규칙',
+      rules: [{ id: 'base-rules', title: '전역 기본 규칙', content: '# Base\n\n- a' }],
+    },
+    {
+      id: 'harness-safety',
+      title: '하네스 안전 규칙',
+      rules: [{ id: 'git-safety', title: 'Git 안전 규칙', content: '# Git\n\n- b' }],
+    },
+    {
+      id: 'react-typescript',
+      title: 'React + TypeScript',
+      rules: [{ id: 'stack-libraries', title: '스택 / 라이브러리 표준', content: '# React / TypeScript 스택 표준\n\n## 기반\n- React 18.3.x + TypeScript (strict 모드, `noUnusedLocals`, `noUnusedParameters`)\n- Vite 5.x (신규 프로젝트 고정). 기존 6.x 프로젝트는 유지하되 신규 도입은 5로.\n- Node 18+, 패키지 매니저는 pnpm. 모노레포는 pnpm + Turbo.\n\n## 상태 관리\n- **전역 상태**: `zustand` + `persist` 미들웨어 (localStorage).\n- **서버 상태**: `@tanstack/react-query` + `axios`.\n- **로컬 상태**: `useState`/`useReducer` — 컴포넌트 경계 안에서.\n\n## 라우팅\n- `react-router-dom` 7.1.x.\n- 라우트 정의는 `src/router/` 또는 `App.tsx` 상단에 집중. 인라인 라우트 정의 금지.\n\n## 스타일\n- Tailwind CSS 기본. 상세 스타일링/UI 규약은 `ui-styling` 룰 참고.\n- 추가 UI 라이브러리는 기존 프로젝트 선택을 따른다 (weai-front-admin: shadcn-ui + Flowbite, system-admin-front: Ant Design). 임의 추가 금지.\n- CSS-in-JS(styled-components, emotion)는 신규 도입 금지.\n\n## 폼\n- 소규모는 컴포넌트 내부 상태로 처리.\n- 검증·에러가 복잡해지면 합의 후 `react-hook-form` 도입 검토.\n\n## 신규 도입 금지 (기존 스택으로 통일)\n- Redux, Recoil, Jotai, SWR, MobX.\n- Moment.js (대신 `date-fns` 또는 네이티브 Intl).\n- styled-components, emotion.' }],
+    },
+    {
+      id: 'spring-boot',
+      title: 'Spring Boot',
+      rules: [{ id: 'architecture', title: '아키텍처 규칙', content: '# Spring\n\n- c' }],
+    },
+    {
+      id: 'ai-instructions',
+      title: 'AI 지침 문서',
+      rules: [{ id: 'root-router', title: '루트 문서는 짧은 라우터로 유지', content: '# Root\n\n- d' }],
+    },
+  ]);
+
+  const outputChunks = [];
+  const originalLog = console.log;
+  const server = http.createServer((request, response) => {
+    response.writeHead(200, { 'Content-Type': 'application/json' });
+    response.end(payload);
+  });
+
+  await new Promise((resolve) => server.listen(0, resolve));
+  const { port } = server.address();
+
+  console.log = (value) => {
+    outputChunks.push(String(value));
+  };
+
+  try {
+    await run(['list', '--source-url', `http://127.0.0.1:${port}/packs.json`]);
+  } finally {
+    console.log = originalLog;
+    await new Promise((resolve) => server.close(resolve));
+  }
+
+  assert.match(outputChunks.join('\n'), /react-ts\tproject\t1 rules\tReact \+ TypeScript/);
 });

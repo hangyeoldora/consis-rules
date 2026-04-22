@@ -21,6 +21,8 @@ npx ai-team-rules react-ts --auto
 
 설치 후에는 `ai-team-rules` 명령을 바로 사용할 수 있습니다.
 
+기본적으로는 배포된 Rules Directory의 `packs.json`을 먼저 읽고, 원격 fetch가 실패하면 내장 로컬 pack으로 fallback 합니다.
+
 ## 먼저: react-ts
 
 프론트 프로젝트라면 보통 아래 명령부터 시작하면 됩니다.
@@ -107,6 +109,7 @@ npx ai-team-rules react-ts --auto
 | `--tool <tool>` | 선택 | `claude`, `codex`, `cursor`, `all` 중 선택 | `claude` |
 | `--scope <scope>` | 선택 | `project`, `global` 중 선택 | pack 기본값 |
 | `--project-path <path>` | 선택 | 적용할 프로젝트 경로 지정 | 현재 디렉터리 |
+| `--source-url <url>` | 선택 | Rules Directory의 `packs.json` URL 지정 | 배포된 directory URL |
 
 ## pack
 
@@ -140,6 +143,18 @@ npx ai-team-rules react-ts --auto
 | `safety` | 직접 본문 추가 | 없음 |
 
 `react-ts`와 `spring-boot`는 필요할 때만 부르는 skill이 아니라, 해당 스택 작업에 항상 적용되는 규칙으로 취급합니다. `docs`만 문서 구조 정리용 skill을 함께 생성합니다.
+
+## 원격 source
+
+기본값은 배포된 Rules Directory Pages의 `packs.json`을 먼저 읽는 remote-first 구조입니다.
+
+```bash
+npx ai-team-rules list
+npx ai-team-rules react-ts --source-url https://consis-rules-directory.pages.dev/packs.json
+```
+
+원격 fetch가 실패하면 로컬에 내장된 pack 정의로 자동 fallback 합니다.
+강제로 로컬만 쓰고 싶으면 `AI_TEAM_RULES_OFFLINE=1` 환경 변수를 사용하면 됩니다.
 
 ## npm Publish 체크리스트
 

@@ -1,28 +1,28 @@
-const sourcePacks = require('../packs.source.json');
+const { PACK_ID_MAP } = require('./source-loader');
 
 const PACK_SPECS = {
   common: {
-    sourceIds: ['ai-base-rules'],
+    sourceIds: [PACK_ID_MAP.common],
     defaultScope: 'global',
     aliases: ['base'],
   },
   safety: {
-    sourceIds: ['harness-safety'],
+    sourceIds: [PACK_ID_MAP.safety],
     defaultScope: 'global',
     aliases: ['harness', 'harness-safety'],
   },
   'react-ts': {
-    sourceIds: ['react-typescript'],
+    sourceIds: [PACK_ID_MAP['react-ts']],
     defaultScope: 'project',
     aliases: ['react', 'react-typescript'],
   },
   'spring-boot': {
-    sourceIds: ['spring-boot'],
+    sourceIds: [PACK_ID_MAP['spring-boot']],
     defaultScope: 'project',
     aliases: ['spring'],
   },
   docs: {
-    sourceIds: ['ai-instructions'],
+    sourceIds: [PACK_ID_MAP.docs],
     defaultScope: 'project',
     aliases: ['document', 'documents', 'ai-instructions'],
   },
@@ -30,7 +30,7 @@ const PACK_SPECS = {
 
 const PACK_ORDER = ['common', 'safety', 'react-ts', 'spring-boot', 'docs'];
 
-function getPackSource(id) {
+function getPackSource(sourcePacks, id) {
   const pack = sourcePacks.find((entry) => entry.id === id);
   if (!pack) {
     throw new Error(`Unknown source pack: ${id}`);
@@ -38,11 +38,11 @@ function getPackSource(id) {
   return pack;
 }
 
-function getPackDefinitions() {
+function getPackDefinitions(sourcePacks) {
   return PACK_ORDER.map((name) => {
     const spec = PACK_SPECS[name];
     const sourceIds = spec.sourceIds;
-    const source = getSourcePacksForName(name);
+    const source = getSourcePacksForName(sourcePacks, name);
     const titles = source.map((entry) => entry.title);
     const ruleCount = source.reduce((count, entry) => count + entry.rules.length, 0);
     const defaultScope = spec.defaultScope;
@@ -61,13 +61,13 @@ function getPackDefinitions() {
   });
 }
 
-function getSourcePacksForName(name) {
+function getSourcePacksForName(sourcePacks, name) {
   const spec = PACK_SPECS[name];
   if (!spec) {
     throw new Error(`Unknown pack spec: ${name}`);
   }
 
-  return spec.sourceIds.map(getPackSource);
+  return spec.sourceIds.map((id) => getPackSource(sourcePacks, id));
 }
 
 function renderPackContent(name, packs) {
