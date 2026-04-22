@@ -187,7 +187,7 @@
     "updatedAt": "2026-04-19",
     "title": "AI 지침 문서",
     "description": "CLAUDE.md / AGENTS.md / Cursor rules를 협업하기 쉬운 구조로 정리하는 규칙",
-    "longDescription": "Claude, Codex, Cursor가 읽는 AI 지침 문서를 루트 라우터, 하위 지침 문서, 필요 시 호출하는 문서 정리 skill 구조로 정리하고 유지하는 규칙입니다. 상시 적용돼야 하는 기술 규칙은 rules/지침 문서 계층에 두고, 긴 절차와 문서 리팩터링 가이드는 필요할 때만 호출하도록 분리합니다.",
+    "longDescription": "Claude, Codex, Cursor가 읽는 AI 지침 문서를 루트 라우터, 하위 지침 문서, 필요 시 호출하는 문서 정리 skill 구조로 정리하고 유지하는 규칙입니다. 상시 적용돼야 하는 기술 규칙은 rules/지침 문서 계층에 두고, 긴 절차와 문서 리팩터링 가이드는 필요할 때만 호출하도록 분리합니다. `History.md`, `CHANGELOG.md`, 작업 로그, 회의록 같은 기록성 문서는 기본적으로 수정 대상에서 제외합니다.",
     "scope": "stack",
     "tags": [
       "AI",
@@ -214,7 +214,7 @@
       {
         "id": "skill-only-workflows",
         "title": "문서 정리 절차만 skill로 분리",
-        "content": "# 문서 정리 Skill\n\nAI 지침 문서 정리와 리팩터링처럼 긴 절차는 루트 `CLAUDE.md` / `AGENTS.md`에 상시 포함하지 않는다.\n\n## 상시 규칙\n- React, Spring 같은 기술 규칙은 rules 또는 하위 지침 문서 계층에 둔다.\n- 공통 규칙과 안전 규칙은 항상 적용되는 문서에 둔다.\n\n## 호출형 절차\n- 문서 구조 정리, 루트 문서 슬림화, 하위 문서 재배치는 skill로 분리한다.\n\n## Claude\n- `.claude/skills/ai-instructions/SKILL.md`\n- 필요할 때 `/ai-instructions`로 호출한다.\n\n## Codex\n- `.agents/skills/ai-instructions/SKILL.md`\n- 필요할 때 `$ai-instructions`로 호출한다.\n\n루트 문서에는 skill 위치와 호출 방법만 짧게 안내한다."
+        "content": "# 문서 정리 Skill\n\nAI 지침 문서 정리와 리팩터링처럼 긴 절차는 루트 `CLAUDE.md` / `AGENTS.md`에 상시 포함하지 않는다.\n\n## 상시 규칙\n- React, Spring 같은 기술 규칙은 rules 또는 하위 지침 문서 계층에 둔다.\n- 공통 규칙과 안전 규칙은 항상 적용되는 문서에 둔다.\n\n## 호출형 절차\n- 문서 구조 정리, 루트 문서 슬림화, 하위 문서 재배치는 skill로 분리한다.\n\n## 제외 대상\n- `History.md`, `CHANGELOG.md`, `worklog.md`, 회의록, 운영 로그 같은 기록성 문서는 기본적으로 수정하지 않는다.\n- 일반 `docs/` 문서는 AI 지침 문서로 명시된 경우에만 구조 정리 대상에 포함한다.\n- 기록 문서 수정은 사용자가 명시적으로 요청한 경우에만 진행한다.\n\n## Claude\n- `.claude/skills/ai-instructions/SKILL.md`\n- 필요할 때 `/ai-instructions`로 호출한다.\n\n## Codex\n- `.agents/skills/ai-instructions/SKILL.md`\n- 필요할 때 `$ai-instructions`로 호출한다.\n\n루트 문서에는 skill 위치와 호출 방법만 짧게 안내한다."
       },
       {
         "id": "korean-language",

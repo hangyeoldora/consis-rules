@@ -10,7 +10,7 @@
   },
   "homepage": "https://github.com/hangyeoldora/consis-rules#readme",
   "bin": {
-    "ai-team-rules": "./bin/consis-rules.js"
+    "ai-team-rules": "bin/consis-rules.js"
   },
   "files": [
     "bin",

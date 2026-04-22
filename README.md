@@ -144,29 +144,6 @@ npx ai-team-rules react-ts --auto
 
 `react-ts`와 `spring-boot`는 필요할 때만 부르는 skill이 아니라, 해당 스택 작업에 항상 적용되는 규칙으로 취급합니다. `docs`만 문서 구조 정리용 skill을 함께 생성합니다.
 
-## 원격 source
-
-기본값은 배포된 Rules Directory Pages의 `packs.json`을 먼저 읽는 remote-first 구조입니다.
-
-```bash
-npx ai-team-rules list
-npx ai-team-rules react-ts --source-url https://consis-rules-directory.pages.dev/packs.json
-```
-
-원격 fetch가 실패하면 로컬에 내장된 pack 정의로 자동 fallback 합니다.
-강제로 로컬만 쓰고 싶으면 `AI_TEAM_RULES_OFFLINE=1` 환경 변수를 사용하면 됩니다.
-
-## npm Publish 체크리스트
-
-- `npm whoami`로 현재 로그인 계정을 확인한다.
-- npm 계정에 publish 권한이 있는지 확인한다.
-- 2FA가 켜져 있다면 publish용 OTP를 준비하거나, bypass 2FA가 가능한 granular access token을 사용한다.
-- `package.json`의 `name`, `version`, `bin`, `repository`, `homepage`를 최종 확인한다.
-- `npm pkg fix`를 실행해 publish 경고를 정리한다.
-- `npm test`가 통과하는지 확인한다.
-- `npm publish --access public`를 실행한다.
-- publish 후 `npx ai-team-rules list`처럼 실제 설치 흐름이 동작하는지 확인한다.
-
 참고:
 
 - [Anthropic Claude Code memory docs](https://code.claude.com/docs/en/memory)
