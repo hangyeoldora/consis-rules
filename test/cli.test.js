@@ -14,6 +14,9 @@ test('apply codex project writes AGENTS.md managed blocks', async () => {
   const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
   assert.match(output, /consis-rules:start common/);
   assert.match(output, /consis-rules:start react-ts/);
+  assert.match(output, /\$react-ts/);
+  assert.doesNotMatch(output, /# React \/ TypeScript 스택 표준/);
+  assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'react-ts', 'SKILL.md')), true);
 });
 
 test('apply cursor project writes one file per pack', async () => {
@@ -44,7 +47,8 @@ test('apply spring alias resolves to spring-boot pack', async () => {
   await run(['apply', 'spring', '--tool', 'codex', '--scope', 'project', '--project-path', projectDir]);
 
   const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
-  assert.match(output, /Spring Boot/);
+  assert.match(output, /\$react-ts|# Consis Rules: spring-boot|Spring Boot/);
+  assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'spring-boot', 'SKILL.md')), true);
 });
 
 test('auto mode adds docs but not common for default claude target', async () => {
@@ -57,6 +61,9 @@ test('auto mode adds docs but not common for default claude target', async () =>
   assert.match(claudeOutput, /consis-rules:start docs/);
   assert.doesNotMatch(claudeOutput, /consis-rules:start common/);
   assert.match(claudeOutput, /\/ai-instructions/);
+  assert.match(claudeOutput, /\/react-ts/);
+  assert.doesNotMatch(claudeOutput, /# React \/ TypeScript 스택 표준/);
+  assert.equal(fs.existsSync(path.join(projectDir, '.claude', 'skills', 'react-ts', 'SKILL.md')), true);
   assert.equal(fs.existsSync(path.join(projectDir, '.claude', 'skills', 'ai-instructions', 'SKILL.md')), true);
 });
 
@@ -69,5 +76,7 @@ test('auto mode with codex writes codex docs hint and skill file', async () => {
   assert.match(agentsOutput, /consis-rules:start spring-boot/);
   assert.match(agentsOutput, /consis-rules:start docs/);
   assert.match(agentsOutput, /\$ai-instructions/);
+  assert.doesNotMatch(agentsOutput, /# Spring Boot Architecture/);
+  assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'spring-boot', 'SKILL.md')), true);
   assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'ai-instructions', 'SKILL.md')), true);
 });

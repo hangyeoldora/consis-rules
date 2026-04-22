@@ -4,12 +4,16 @@ const {
   PACK_ORDER,
   getSourcePacksForName,
   resolvePackName,
+  renderReactTsRootContent,
+  renderSpringBootRootContent,
   renderDocsRootContent,
   renderDocsSkillContent,
+  renderPackSkillContent,
 } = require('./data');
 const {
   getTargetPath,
   getDocsSkillPath,
+  getPackSkillPath,
   upsertManagedBlock,
   writeCursorFile,
 } = require('./filesystem');
@@ -103,6 +107,14 @@ function handleApply(args) {
         writeCursorFile(targetPath, packContent);
       } else {
         upsertManagedBlock(targetPath, packName, packContent);
+      }
+
+      if (shouldCreatePackSkill(packName, tool)) {
+        const skillPath = getPackSkillPath({ tool, scope, projectPath, packName });
+        if (skillPath) {
+          writeCursorFile(skillPath, renderPackSkillContent(packName, getSourcePacksForName(packName)));
+          console.log(`applied ${packName} skill -> ${skillPath}`);
+        }
       }
 
       if (packName === 'docs' && tool !== 'cursor') {
@@ -212,11 +224,23 @@ function expandPackNames(packNames, autoMode) {
 }
 
 function renderPackContentForTool(pack, tool, autoMode) {
+  if (pack.name === 'react-ts' && tool !== 'cursor') {
+    return renderReactTsRootContent(tool);
+  }
+
+  if (pack.name === 'spring-boot' && tool !== 'cursor') {
+    return renderSpringBootRootContent(tool);
+  }
+
   if (pack.name === 'docs' && tool !== 'cursor') {
     return renderDocsRootContent(tool, { autoMode });
   }
 
   return pack.content;
+}
+
+function shouldCreatePackSkill(packName, tool) {
+  return tool !== 'cursor' && ['react-ts', 'spring-boot'].includes(packName);
 }
 
 function validateScope(scope) {

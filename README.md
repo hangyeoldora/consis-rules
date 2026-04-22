@@ -53,6 +53,7 @@ npx consis-rules apply docs --tool cursor --scope project
 - `--tool`을 생략하면 기본값은 `claude`입니다.
 - `spring`, `document` 같은 별칭도 허용합니다.
 - `consis-rules react-ts --auto`처럼 `apply` 없이도 바로 실행할 수 있습니다.
+- `react-ts`, `spring-boot`는 루트 문서에 전문을 넣지 않고 요약 + skill reference로 설치합니다.
 
 ## 파일 대상
 
@@ -71,5 +72,9 @@ npx consis-rules apply docs --tool cursor --scope project
 `docs --auto`로 들어간 루트 문서에는 tool별 호출 힌트도 함께 적습니다.
 - Claude: `/ai-instructions`
 - Codex: `$ai-instructions`
+
+`react-ts`, `spring-boot`도 같은 방식으로 루트에는 짧은 라우팅만 두고, 상세 규칙은 각 skill 파일로 분리됩니다.
+- Claude: `.claude/skills/react-ts/SKILL.md`, `.claude/skills/spring-boot/SKILL.md`
+- Codex: `.agents/skills/react-ts/SKILL.md`, `.agents/skills/spring-boot/SKILL.md`
 
 Codex/Claude는 한 파일 안에 pack별 마커 블록을 넣어 갱신합니다. Cursor는 pack별 파일을 생성합니다.

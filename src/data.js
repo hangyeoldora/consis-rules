@@ -87,6 +87,49 @@ function renderPackContent(name, packs) {
   return `${lines.join('\n').trim()}\n`;
 }
 
+function renderReactTsRootContent(tool) {
+  const command = tool === 'codex' ? '$react-ts' : '/react-ts';
+  const skillPath = tool === 'codex'
+    ? '.agents/skills/react-ts/SKILL.md'
+    : '.claude/skills/react-ts/SKILL.md';
+
+  const lines = [
+    '# Consis Rules: react-ts',
+    '',
+    '## 프론트엔드 기본 라우팅',
+    '- 이 저장소의 프론트엔드 관련 작업은 React + TypeScript 기준으로 진행한다.',
+    '- 기본 스택은 React 18, TypeScript strict, Tailwind, React Query, Zustand를 따른다.',
+    '- 컴포넌트 구조, 렌더링 안전, 상태 관리 세부 규칙은 react-ts skill reference를 따른다.',
+    '',
+    '## Skill 위치 및 호출',
+    `- Skill 파일: \`${skillPath}\``,
+    `- 호출 명령: \`${command}\``,
+  ];
+
+  return `${lines.join('\n').trim()}\n`;
+}
+
+function renderSpringBootRootContent(tool) {
+  const command = tool === 'codex' ? '$spring-boot' : '/spring-boot';
+  const skillPath = tool === 'codex'
+    ? '.agents/skills/spring-boot/SKILL.md'
+    : '.claude/skills/spring-boot/SKILL.md';
+
+  const lines = [
+    '# Consis Rules: spring-boot',
+    '',
+    '## 백엔드 기본 라우팅',
+    '- 이 저장소의 Spring Boot 관련 작업은 레이어드 아키텍처와 REST API 규칙을 기본으로 따른다.',
+    '- 보안, 트랜잭션, 테스트 세부 규칙은 spring-boot skill reference를 따른다.',
+    '',
+    '## Skill 위치 및 호출',
+    `- Skill 파일: \`${skillPath}\``,
+    `- 호출 명령: \`${command}\``,
+  ];
+
+  return `${lines.join('\n').trim()}\n`;
+}
+
 function renderDocsRootContent(tool, { autoMode = false } = {}) {
   const command = tool === 'codex' ? '$ai-instructions' : '/ai-instructions';
   const skillPath = tool === 'codex'
@@ -117,7 +160,11 @@ function renderDocsRootContent(tool, { autoMode = false } = {}) {
 }
 
 function renderDocsSkillContent(packs) {
-  const lines = ['# ai-instructions', ''];
+  return renderPackSkillContent('ai-instructions', packs);
+}
+
+function renderPackSkillContent(skillName, packs) {
+  const lines = [`# ${skillName}`, ''];
 
   for (const pack of packs) {
     lines.push(`## ${pack.title}`);
@@ -157,6 +204,9 @@ module.exports = {
   getPackDefinitions,
   getSourcePacksForName,
   resolvePackName,
+  renderReactTsRootContent,
+  renderSpringBootRootContent,
   renderDocsRootContent,
   renderDocsSkillContent,
+  renderPackSkillContent,
 };
