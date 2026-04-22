@@ -164,21 +164,26 @@ function renderDocsSkillContent(packs) {
 }
 
 function renderPackSkillContent(skillName, packs) {
-  const lines = [`# ${skillName}`, ''];
+  const lines = [`# ${skillName}`];
 
   for (const pack of packs) {
-    lines.push(`## ${pack.title}`);
     lines.push('');
+    lines.push(`## ${pack.title}`);
 
     for (const rule of pack.rules) {
       lines.push(`### ${rule.title}`);
-      lines.push('');
-      lines.push(rule.content.trim());
-      lines.push('');
+      lines.push(normalizeSkillRuleContent(rule.content));
     }
   }
 
   return `${lines.join('\n').trim()}\n`;
+}
+
+function normalizeSkillRuleContent(content) {
+  const lines = content.trim().split('\n');
+  const withoutTopHeading = lines[0]?.startsWith('# ') ? lines.slice(1) : lines;
+  const normalized = withoutTopHeading.join('\n').replace(/^\n+/, '').replace(/\n{3,}/g, '\n\n');
+  return normalized.trim();
 }
 
 function resolvePackName(input) {
