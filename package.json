@@ -1,5 +1,5 @@
 {
-  "name": "consis-rules",
+  "name": "ai-team-rules",
   "version": "0.1.0",
   "description": "Set up consistent team rules for vibe coding across Claude, Codex, and Cursor.",
   "license": "MIT",
@@ -10,7 +10,7 @@
   },
   "homepage": "https://github.com/hangyeoldora/consis-rules#readme",
   "bin": {
-    "consis-rules": "./bin/consis-rules.js"
+    "ai-team-rules": "./bin/consis-rules.js"
   },
   "files": [
     "bin",

@@ -59,7 +59,7 @@ function handleList() {
 function handleShow(args) {
   const packName = resolvePackName(args[0]);
   if (!packName) {
-    throw new Error('Usage: consis-rules show <pack>');
+    throw new Error('Usage: ai-team-rules show <pack>');
   }
 
   const pack = getPackMap()[packName];
@@ -77,7 +77,7 @@ function handleApply(args) {
   const unknownPacks = normalizedPackNames.filter((name) => !packMap[name]);
 
   if (normalizedPackNames.length === 0) {
-    throw new Error('Usage: consis-rules apply <pack...> [--auto] [--tool codex|claude|cursor|all] [--scope global|project] [--project-path path]');
+    throw new Error('Usage: ai-team-rules apply <pack...> [--auto] [--tool codex|claude|cursor|all] [--scope global|project] [--project-path path]');
   }
 
   if (unknownPacks.length > 0) {
@@ -241,12 +241,12 @@ function validateScope(scope) {
 }
 
 function printHelp() {
-  console.log(`consis-rules
+  console.log(`ai-team-rules
 
 Commands:
-  consis-rules list
-  consis-rules show <pack>
-  consis-rules apply <pack...> [--auto] [--tool codex|claude|cursor|all] [--scope global|project] [--project-path path]
+  ai-team-rules list
+  ai-team-rules show <pack>
+  ai-team-rules apply <pack...> [--auto] [--tool codex|claude|cursor|all] [--scope global|project] [--project-path path]
 
 Packs:
   ${PACK_ORDER.join(', ')}

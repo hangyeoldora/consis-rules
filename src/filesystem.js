@@ -70,8 +70,8 @@ function getDocsSkillPath({ tool, scope, projectPath }) {
 
 function upsertManagedBlock(filePath, packName, content) {
   ensureDir(path.dirname(filePath));
-  const startMarker = `<!-- consis-rules:start ${packName} -->`;
-  const endMarker = `<!-- consis-rules:end ${packName} -->`;
+  const startMarker = `<!-- ai-team-rules:start ${packName} -->`;
+  const endMarker = `<!-- ai-team-rules:end ${packName} -->`;
   const block = `${startMarker}\n${content.trim()}\n${endMarker}\n`;
   const current = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
   const pattern = new RegExp(`${escapeRegExp(startMarker)}[\\s\\S]*?${escapeRegExp(endMarker)}\\n?`, 'g');

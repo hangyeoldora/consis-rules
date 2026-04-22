@@ -7,20 +7,20 @@ const assert = require('node:assert/strict');
 const { run } = require('../src/cli');
 
 test('apply codex project writes AGENTS.md managed blocks', async () => {
-  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-project-'));
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-project-'));
 
   await run(['apply', 'common', 'react-ts', '--tool', 'codex', '--scope', 'project', '--project-path', projectDir]);
 
   const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
-  assert.match(output, /consis-rules:start common/);
-  assert.match(output, /consis-rules:start react-ts/);
+  assert.match(output, /ai-team-rules:start common/);
+  assert.match(output, /ai-team-rules:start react-ts/);
   assert.match(output, /프론트엔드 상시 규칙/);
   assert.doesNotMatch(output, /\$react-ts/);
   assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'react-ts', 'SKILL.md')), false);
 });
 
 test('apply cursor project writes one file per pack', async () => {
-  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-cursor-'));
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-cursor-'));
 
   await run(['apply', 'docs', '--tool', 'cursor', '--scope', 'project', '--project-path', projectDir]);
 
@@ -34,7 +34,7 @@ test('apply cursor project writes one file per pack', async () => {
 });
 
 test('apply cursor global throws official settings guidance error', async () => {
-  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-cursor-global-'));
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-cursor-global-'));
 
   await assert.rejects(
     () => run(['apply', 'docs', '--tool', 'cursor', '--scope', 'global', '--project-path', projectDir]),
@@ -43,7 +43,7 @@ test('apply cursor global throws official settings guidance error', async () => 
 });
 
 test('apply without --tool defaults to claude only', async () => {
-  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-default-'));
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-default-'));
 
   await run(['apply', 'docs', '--scope', 'project', '--project-path', projectDir]);
 
@@ -54,7 +54,7 @@ test('apply without --tool defaults to claude only', async () => {
 });
 
 test('apply spring alias resolves to spring-boot pack', async () => {
-  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-spring-'));
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-spring-'));
 
   await run(['apply', 'spring', '--tool', 'codex', '--scope', 'project', '--project-path', projectDir]);
 
@@ -64,14 +64,14 @@ test('apply spring alias resolves to spring-boot pack', async () => {
 });
 
 test('auto mode adds docs but not common for default claude target', async () => {
-  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-auto-'));
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-auto-'));
 
   await run(['react-ts', '--auto', '--project-path', projectDir]);
 
   const claudeOutput = fs.readFileSync(path.join(projectDir, 'CLAUDE.md'), 'utf8');
-  assert.match(claudeOutput, /consis-rules:start react-ts/);
-  assert.match(claudeOutput, /consis-rules:start docs/);
-  assert.doesNotMatch(claudeOutput, /consis-rules:start common/);
+  assert.match(claudeOutput, /ai-team-rules:start react-ts/);
+  assert.match(claudeOutput, /ai-team-rules:start docs/);
+  assert.doesNotMatch(claudeOutput, /ai-team-rules:start common/);
   assert.match(claudeOutput, /\/ai-instructions/);
   assert.match(claudeOutput, /프론트엔드 상시 규칙/);
   assert.equal(fs.existsSync(path.join(projectDir, '.claude', 'skills', 'react-ts', 'SKILL.md')), false);
@@ -79,13 +79,13 @@ test('auto mode adds docs but not common for default claude target', async () =>
 });
 
 test('auto mode with codex writes codex docs hint and skill file', async () => {
-  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'consis-rules-auto-codex-'));
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-auto-codex-'));
 
   await run(['apply', 'spring', '--auto', '--tool', 'codex', '--project-path', projectDir]);
 
   const agentsOutput = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
-  assert.match(agentsOutput, /consis-rules:start spring-boot/);
-  assert.match(agentsOutput, /consis-rules:start docs/);
+  assert.match(agentsOutput, /ai-team-rules:start spring-boot/);
+  assert.match(agentsOutput, /ai-team-rules:start docs/);
   assert.match(agentsOutput, /\$ai-instructions/);
   assert.match(agentsOutput, /백엔드 상시 규칙/);
   assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'spring-boot', 'SKILL.md')), false);

@@ -1,29 +1,32 @@
-# consis-rules
+# ai-team-rules
 
-Claude, Codex, Cursor에서 팀 협업용 AI 규칙을 빠르게 맞추는 CLI입니다.
-바이브 코딩을 하더라도 프로젝트별 규칙, 문서 구조, 공통 작업 방식이 흔들리지 않게 세팅하는 용도에 맞춰져 있습니다.
-새 프로젝트를 시작할 때뿐 아니라, 이미 문서와 코드가 있는 기존 프로젝트에서도 규칙을 다시 정리하고 협업 친화적으로 리팩토링 방향을 잡는 데 사용할 수 있습니다.
+Claude, Codex, Cursor에 상관없이 팀 협업용 AI 규칙을 빠르게 세팅 및 사용할 수 있게 해주는 패키지입니다.
+새 프로젝트를 시작할 때뿐 아니라, 이미 문서와 코드가 있는 기존 프로젝트에서도 CLAUDE/AGENTS.md 등 문서를 다시 정리하고 협업 친화적으로 리팩토링 방향을 잡는 데 사용할 수 있습니다.
+그리고 바이브 코딩을 하더라도 프로젝트별 규칙, 문서 구조, 공통 작업 방식이 흔들리지 않게 세팅하는 용도에 맞춰져 있습니다.
+
+세부 규칙은 해당 링크를 통해 확인할 수 있습니다.
 
 ## 설치
 
 ```bash
-npm install -g consis-rules
+npm install -g ai-team-rules
 ```
 
 설치 없이 한 번만 실행하려면:
 
+리액트 예시
 ```bash
-npx consis-rules react-ts --auto
+npx ai-team-rules react-ts --auto
 ```
 
-설치 후에는 `consis-rules` 명령을 바로 사용할 수 있습니다.
+설치 후에는 `ai-team-rules` 명령을 바로 사용할 수 있습니다.
 
 ## 먼저: react-ts
 
 프론트 프로젝트라면 보통 아래 명령부터 시작하면 됩니다.
 
 ```bash
-npx consis-rules react-ts --auto
+npx ai-team-rules react-ts --auto
 ```
 
 기본값은 `claude`이며, 아래를 세팅합니다.
@@ -37,15 +40,17 @@ npx consis-rules react-ts --auto
 Codex 기준으로 넣고 싶으면:
 
 ```bash
-npx consis-rules react-ts --auto --tool codex
+npx ai-team-rules react-ts --auto --tool codex
 ```
 
 ## docs만 적용
 
+문서 구조 규칙은 claude, codex 등 md 파일로 인한 컨텍스트 방지를 막고 보편적인 문서 관리/규칙을 따르도록 규정했습니다.
+
 문서 구조 규칙만 따로 넣고 싶으면:
 
 ```bash
-npx consis-rules docs
+npx ai-team-rules docs
 ```
 
 기본값은 `claude`입니다. 이 경우 아래 구성이 생깁니다.
@@ -62,9 +67,9 @@ npx consis-rules docs
 예시:
 
 ```bash
-npx consis-rules common --scope global
-npx consis-rules safety --scope global
-npx consis-rules react-ts --auto --tool codex --scope global
+npx ai-team-rules common --scope global
+npx ai-team-rules safety --scope global
+npx ai-team-rules react-ts --auto --tool codex --scope global
 ```
 
 전역 대상 경로는 tool별로 다릅니다.
@@ -82,16 +87,16 @@ Cursor는 공식 문서 기준으로 전역 규칙을 파일이 아니라 Settin
 `apply`는 생략할 수 있습니다. 아래 두 명령은 동일합니다.
 
 ```bash
-npx consis-rules apply react-ts --auto
-npx consis-rules react-ts --auto
+npx ai-team-rules apply react-ts --auto
+npx ai-team-rules react-ts --auto
 ```
 
 | 명령 | 설명 | 예시 |
 | --- | --- | --- |
-| `consis-rules <pack>` | pack 바로 적용 | `npx consis-rules react-ts --auto` |
-| `consis-rules apply <pack>` | pack 명시 적용 | `npx consis-rules apply docs` |
-| `consis-rules list` | 사용 가능한 pack 목록 출력 | `npx consis-rules list` |
-| `consis-rules show <pack>` | pack 원문 출력 | `npx consis-rules show react-ts` |
+| `ai-team-rules <pack>` | pack 바로 적용 | `npx ai-team-rules react-ts --auto` |
+| `ai-team-rules apply <pack>` | pack 명시 적용 | `npx ai-team-rules apply docs` |
+| `ai-team-rules list` | 사용 가능한 pack 목록 출력 | `npx ai-team-rules list` |
+| `ai-team-rules show <pack>` | pack 원문 출력 | `npx ai-team-rules show react-ts` |
 
 ## 옵션
 
@@ -145,7 +150,7 @@ npx consis-rules react-ts --auto
 - `npm pkg fix`를 실행해 publish 경고를 정리한다.
 - `npm test`가 통과하는지 확인한다.
 - `npm publish --access public`를 실행한다.
-- publish 후 `npx consis-rules list`처럼 실제 설치 흐름이 동작하는지 확인한다.
+- publish 후 `npx ai-team-rules list`처럼 실제 설치 흐름이 동작하는지 확인한다.
 
 참고:
 
