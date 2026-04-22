@@ -27,6 +27,9 @@ test('apply cursor project writes one file per pack', async () => {
   const outputPath = path.join(projectDir, '.cursor', 'rules', 'consis-docs.mdc');
   assert.equal(fs.existsSync(outputPath), true);
   const output = fs.readFileSync(outputPath, 'utf8');
+  assert.match(output, /^---/);
+  assert.match(output, /description: AI 지침 문서 구조와 문서 정리 원칙을 항상 적용한다\./);
+  assert.match(output, /alwaysApply: true/);
   assert.match(output, /AI 지침 문서/);
 });
 

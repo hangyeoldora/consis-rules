@@ -8,7 +8,7 @@ const {
   renderSpringBootRootContent,
   renderDocsRootContent,
   renderDocsSkillContent,
-  renderPackSkillContent,
+  renderCursorRuleContent,
 } = require('./data');
 const {
   getTargetPath,
@@ -215,6 +215,10 @@ function expandPackNames(packNames, autoMode) {
 }
 
 function renderPackContentForTool(pack, tool, autoMode) {
+  if (tool === 'cursor') {
+    return renderCursorRuleContent(pack.name, pack.content);
+  }
+
   if (pack.name === 'react-ts' && tool !== 'cursor') {
     return renderReactTsRootContent(tool);
   }

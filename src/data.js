@@ -56,6 +56,7 @@ function getPackDefinitions() {
       ruleCount,
       description: titles.join(' + '),
       content: renderPackContent(name, source),
+      cursorDescription: getCursorRuleDescription(name),
     };
   });
 }
@@ -158,6 +159,20 @@ function renderDocsSkillContent(packs) {
   return renderPackSkillContent('ai-instructions', packs);
 }
 
+function renderCursorRuleContent(packName, content) {
+  const lines = [
+    '---',
+    `description: ${getCursorRuleDescription(packName)}`,
+    'globs: []',
+    'alwaysApply: true',
+    '---',
+    '',
+    content.trim(),
+  ];
+
+  return `${lines.join('\n').trim()}\n`;
+}
+
 function renderPackSkillContent(skillName, packs) {
   const lines = [
     '---',
@@ -190,10 +205,22 @@ function normalizeSkillRuleContent(content) {
 
 function getSkillDescription(skillName) {
   const descriptions = {
-    'ai-instructions': 'Refactor AGENTS.md, CLAUDE.md, and Cursor rules into short router documents plus nearby scoped rule documents and on-demand workflow guides.',
+    'ai-instructions': 'AGENTS.md, CLAUDE.md, Cursor rules를 짧은 라우터 문서와 하위 규칙 문서, 필요 시 호출하는 문서 정리 가이드 구조로 재정리한다.',
   };
 
   return descriptions[skillName] || `Use the ${skillName} workflow when its named domain applies.`;
+}
+
+function getCursorRuleDescription(packName) {
+  const descriptions = {
+    common: '팀 공통 AI 작업 기본 규칙을 항상 적용한다.',
+    safety: '파괴적 명령과 Git, 로그 노출 관련 안전 규칙을 항상 적용한다.',
+    'react-ts': 'React와 TypeScript 프론트엔드 작업 규칙을 항상 적용한다.',
+    'spring-boot': 'Spring Boot 백엔드 작업 규칙을 항상 적용한다.',
+    docs: 'AI 지침 문서 구조와 문서 정리 원칙을 항상 적용한다.',
+  };
+
+  return descriptions[packName] || `${packName} 규칙을 항상 적용한다.`;
 }
 
 function resolvePackName(input) {
@@ -223,5 +250,6 @@ module.exports = {
   renderSpringBootRootContent,
   renderDocsRootContent,
   renderDocsSkillContent,
+  renderCursorRuleContent,
   renderPackSkillContent,
 };
