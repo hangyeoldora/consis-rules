@@ -1,6 +1,6 @@
 {
   "name": "ai-team-rules",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Set up consistent team rules for vibe coding across Claude, Codex, and Cursor.",
   "license": "MIT",
   "type": "commonjs",
