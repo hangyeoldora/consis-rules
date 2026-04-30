@@ -3,6 +3,9 @@
 Claude, Codex, Cursor에 상관없이 팀 협업용 AI 규칙을 빠르게 세팅·사용할 수 있게 해주는 패키지입니다.<br/>
 새 프로젝트뿐 아니라 이미 문서와 코드가 있는 기존 프로젝트에서도 `CLAUDE.md`, `AGENTS.md` 등 AI 지침 문서를 다시 정리하고 협업 친화적으로 리팩토링 방향을 잡는 데 사용할 수 있습니다.<br/>
 바이브 코딩을 하더라도 프로젝트별 규칙, 문서 구조, 공통 작업 방식이 흔들리지 않게 세팅하는 용도에 맞춰져 있습니다.<br/>
+ai 기본 규칙, 보안, git 규칙, react & ts, spring boot, nestjs 등 제공하고 있습니다.
+
+그리고 `/ai-instructions`의 slash command의 경우, 클로드 공식문서에서 권장하는 규칙대로 명령어 실행 시, 규칙에 맞게 전체 프로젝트에 대한 문서를 생성합니다.
 
 각 규칙의 내용은 Rules Directory에서 미리 확인할 수 있습니다 → [Consis Rules Directory](https://consis-rules-directory.pages.dev/)
 
@@ -35,6 +38,24 @@ npx ai-team-rules react-ts --auto --tool codex
 ```
 
 Codex는 공식 rules 폴더 개념이 없어, `AGENTS.md` managed block에 풀 규칙이 직접 삽입됩니다.
+
+프로젝트에 루트 `CLAUDE.md`와 하위 폴더 `CLAUDE.md`가 이미 있으면, Codex 적용 시 `AGENTS.md`에는 요약 포인터만 유지하고 상세 규칙은 CLAUDE 문서 계층을 참조합니다.
+
+## 백엔드: spring-boot / nestjs
+
+백엔드 프로젝트는 아래처럼 적용합니다.
+
+```bash
+npx ai-team-rules spring-boot --auto
+npx ai-team-rules nestjs --auto
+```
+
+별칭도 지원합니다.
+
+```bash
+npx ai-team-rules spring --auto
+npx ai-team-rules nest --auto
+```
 
 ## common: 공통 규칙 일괄 세팅
 
@@ -110,6 +131,7 @@ npx ai-team-rules react-ts --auto
 | `safety` | `global` | 파괴적 명령, Git, 로그 노출 안전 규칙 |
 | `react-ts` | `project` | React + TypeScript 프론트 상시 규칙 |
 | `spring-boot` | `project` | Spring Boot 백엔드 상시 규칙 |
+| `nestjs` | `project` | NestJS 백엔드 상시 규칙 |
 | `docs` | `project` | 루트 문서 라우팅 + AI 문서 구조 skill |
 
 <br/>
@@ -126,6 +148,7 @@ npx ai-team-rules react-ts --auto
 | `harness`, `harness-safety` | `safety` |
 | `react`, `react-typescript` | `react-ts` |
 | `spring` | `spring-boot` |
+| `nest` | `nestjs` |
 | `document`, `documents`, `ai-instructions` | `docs` |
 
 

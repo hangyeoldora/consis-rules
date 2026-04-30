@@ -10,6 +10,7 @@ const PACK_ID_MAP = {
   safety: 'harness-safety',
   'react-ts': 'react-typescript',
   'spring-boot': 'spring-boot',
+  nestjs: 'nestjs',
   docs: 'ai-instructions',
 };
 

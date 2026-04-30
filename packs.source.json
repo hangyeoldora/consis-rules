@@ -227,7 +227,52 @@
       {
         "id": "testing",
         "title": "테스트 규칙",
-        "content": "# Spring Testing Rules\n\n## 테스트 전략\n- 단위 테스트: Service, 도메인 로직.\n- 통합 테스트: Controller (`MockMvc`), Repository.\n- `@SpringBootTest`는 최소화 — 기본은 슬라이스 테스트(`@WebMvcTest`, `@DataJpaTest`).\n\n## 네이밍\n- 메서드: `should_행위_when_조건`.\n- 클래스: `<대상>Test`.\n\n## Mockito\n- `@MockBean`보다 `@Mock` + `@InjectMocks` 선호.\n- `verify()`로 상호작용 검증.\n- 고정값에 `ArgumentCaptor` 활용.\n\n## 테스트 데이터\n- 테스트 픽스처는 한 곳에 모아 관리.\n- DB 상태 초기화는 `@Transactional` 또는 명시적 cleanup."
+        "content": "# Spring Testing Rules\n\n## 테스트 전략\n- 단위 테스트: Service, 도메인 로직.\n- 통합 테스트: Controller (`MockMvc`), Repository.\n- `@SpringBootTest`는 최소화 — 기본은 슬라이스 테스트(`@WebMvcTest`, `@DataJpaTest`).\n\n## 네이밍\n- 메서드: `should_행위_when_조건`.\n- 클래스: `<대상>Test`.\n\n## Mockito\n- 단위 테스트는 `@Mock` + `@InjectMocks`를 기본으로 사용한다.\n- 슬라이스 테스트(`@WebMvcTest` 등)에서 컨텍스트 빈 대체가 필요하면 `@MockBean`을 사용한다.\n- `verify()`로 상호작용 검증.\n- 고정값에 `ArgumentCaptor` 활용.\n\n## 테스트 데이터\n- 테스트 픽스처는 한 곳에 모아 관리.\n- DB 상태 초기화는 `@Transactional` 또는 명시적 cleanup."
+      }
+    ],
+    "applyScopes": [
+      "project"
+    ]
+  },
+  {
+    "id": "nestjs",
+    "version": "1.0.0",
+    "locale": "ko",
+    "updatedAt": "2026-04-30",
+    "title": "NestJS",
+    "description": "NestJS 백엔드 표준 — 모듈 구조·요청 생명주기·보안·테스트",
+    "longDescription": "NestJS + TypeScript 백엔드 팀 작업 규칙입니다. 모듈 경계, 요청 생명주기, DTO 검증, 인증/인가, 테스트 전략을 일관되게 맞추기 위한 기준을 포함합니다.",
+    "scope": "stack",
+    "tags": [
+      "nestjs",
+      "typescript",
+      "backend",
+      "rest-api",
+      "security"
+    ],
+    "author": "Consis AI",
+    "stars": 0,
+    "featured": true,
+    "rules": [
+      {
+        "id": "stack-architecture",
+        "title": "스택 / 아키텍처 표준",
+        "content": "# NestJS 아키텍처 표준\n\n## 기반 원칙\n- 기존 프로젝트는 `package.json`, lockfile, 설정 파일에 명시된 현재 버전과 스택을 우선 따른다.\n- 신규 프로젝트는 팀이 권장하는 최신 안정 버전을 사용하되, 메이저 버전 선택은 사용자가 달리 정하지 않으면 현재 생태계의 안정 구성을 기준으로 제안한다.\n- 메이저 업그레이드, 신규 라이브러리 도입, 기존 스택 교체는 사용자가 명시적으로 요청했을 때만 진행한다.\n- 버전이 불명확하면 추측하지 말고 현재 프로젝트 설정을 먼저 확인한다.\n- TypeScript는 strict 모드와 `noUnusedLocals`, `noUnusedParameters`를 기본 원칙으로 유지한다.\n\n## 모듈 구조\n- 기능 단위 모듈(`users`, `orders`)을 기본으로 구성한다.\n- 모듈 경계를 넘는 직접 import를 지양하고, 필요한 경우 서비스/포트 인터페이스로 연결한다.\n- 순환 의존이 생기면 `forwardRef()`로 봉합하기보다 책임을 재설계한다.\n\n## 계층\n- Controller는 HTTP 입출력 처리에 집중하고 비즈니스 로직은 Service로 분리한다.\n- Repository/Adapter 계층은 데이터 접근 책임만 가진다.\n- Entity/Schema를 API 응답으로 직접 노출하지 않고 DTO로 매핑한다.\n\n## 의존성 주입\n- Provider는 토큰 기반 주입 패턴을 우선하고, 숨은 전역 상태를 만들지 않는다.\n- 테스트에서 교체 가능한 인터페이스 경계를 유지한다."
+      },
+      {
+        "id": "request-lifecycle",
+        "title": "요청 생명주기 규칙",
+        "content": "# 요청 생명주기\n\n## 책임 분리\n- Middleware: 공통 전처리(요청 ID, 로깅 컨텍스트)만 담당한다.\n- Guard: 인증·인가 판단만 담당한다.\n- Pipe: 입력 변환/검증만 담당한다.\n- Interceptor: 응답 매핑, 성능 측정, 공통 후처리만 담당한다.\n- Exception Filter: 에러 응답 표준화를 담당한다.\n\n## 적용 범위\n- 전역 적용은 `main.ts`에서 명시적으로 등록한다.\n- 컨트롤러/메서드 수준 데코레이터는 필요한 범위에만 최소 적용한다.\n- 같은 역할의 로직을 Middleware/Guard/Pipe에 중복 배치하지 않는다.\n\n## 예외 처리\n- 도메인 예외와 인프라 예외를 구분하고, 클라이언트에는 표준 에러 스키마로 반환한다.\n- 프로덕션에서 스택 트레이스, 내부 경로, SQL 원문을 응답에 노출하지 않는다."
+      },
+      {
+        "id": "validation-security",
+        "title": "입력 검증 / 보안",
+        "content": "# 입력 검증 / 보안\n\n## DTO 검증\n- 모든 쓰기 요청(`POST`, `PUT`, `PATCH`)은 DTO + `class-validator` 검증을 기본으로 한다.\n- 전역 ValidationPipe에 `whitelist: true`, `forbidNonWhitelisted: true`를 기본 적용한다.\n- 타입 변환이 필요한 입력은 `class-transformer` 또는 명시적 Pipe로 처리한다.\n\n## 인증 / 인가\n- 인증은 Guard 기반으로 구현하고, 권한 체크는 역할/정책 단위로 분리한다.\n- 비밀번호, 토큰, 키는 평문 저장 금지. 환경 변수 또는 시크릿 매니저를 사용한다.\n- CORS는 허용 origin을 명시하고 와일드카드(`*`)는 지양한다.\n\n## 데이터 접근 보안\n- 쿼리는 파라미터 바인딩을 기본으로 하고 문자열 결합 쿼리를 금지한다.\n- 정렬/필터 키는 화이트리스트로 제한한다.\n- 로그에는 민감 정보(토큰, 주민번호, 카드번호)를 남기지 않는다."
+      },
+      {
+        "id": "testing",
+        "title": "테스트 규칙",
+        "content": "# NestJS 테스트 규칙\n\n## 테스트 전략\n- 단위 테스트: Service, Guard, Pipe, 순수 유틸을 우선한다.\n- 통합 테스트: 모듈 경계와 데이터 접근 계층을 검증한다.\n- E2E 테스트: 핵심 사용자 시나리오와 권한 경계를 검증한다.\n\n## 원칙\n- `TestingModule`은 필요한 provider만 로드하고 과도한 부트스트랩을 피한다.\n- 외부 의존성(DB, Redis, 메시지 브로커)은 테스트 대역 또는 테스트 컨테이너 전략을 명시한다.\n- 테스트는 성공/실패/권한없음/검증실패 케이스를 최소 1회 이상 다룬다.\n\n## 네이밍\n- 메서드: `should_행위_when_조건`.\n- 클래스: `<대상>.spec.ts`."
       }
     ],
     "applyScopes": [
@@ -263,12 +308,12 @@
       {
         "id": "scoped-files",
         "title": "하위 문서는 코드 가까이에 배치",
-        "content": "# 하위 AI 지침 문서\n\n실제 서브시스템 경계가 있는 폴더 가까이에 하위 `AGENTS.md`와 `CLAUDE.md`를 둔다.\n\n## 좋은 후보\n- `frontend/AGENTS.md`와 `frontend/CLAUDE.md`\n- `backend/AGENTS.md`와 `backend/CLAUDE.md`\n- `apps/web/AGENTS.md`와 `apps/web/CLAUDE.md`\n- `services/api/AGENTS.md`와 `services/api/CLAUDE.md`\n- `packages/ui/AGENTS.md`와 `packages/ui/CLAUDE.md`\n\n하위 문서에는 해당 폴더의 책임, 주요 파일, 로컬 제약, 로컬 테스트만 둔다."
+        "content": "# 하위 AI 지침 문서\n\n실제 서브시스템 경계가 있는 폴더 가까이에 하위 `CLAUDE.md`를 둔다.\n\n## Codex 문서 운영\n- `AGENTS.md`는 루트에만 둔다.\n- 루트 `AGENTS.md`에는 루트/하위 `CLAUDE.md`를 우선 참조한다는 안내만 둔다.\n- 하위 폴더에는 `AGENTS.md`를 생성하지 않는다.\n\n## 좋은 후보\n- `frontend/CLAUDE.md`\n- `backend/CLAUDE.md`\n- `apps/web/CLAUDE.md`\n- `services/api/CLAUDE.md`\n- `packages/ui/CLAUDE.md`\n\n하위 문서에는 해당 폴더의 책임, 주요 파일, 로컬 제약, 로컬 테스트만 둔다."
       },
       {
         "id": "skill-only-workflows",
         "title": "문서 정리 절차만 skill로 분리",
-        "content": "# 문서 정리 Skill\n\nAI 지침 문서 정리와 리팩터링처럼 긴 절차는 루트 `CLAUDE.md` / `AGENTS.md`에 상시 포함하지 않는다.\n\n## 상시 규칙\n- React, Spring 같은 기술 규칙은 rules 또는 하위 지침 문서 계층에 둔다.\n- 공통 규칙과 안전 규칙은 항상 적용되는 문서에 둔다.\n\n## 호출형 절차\n- 문서 구조 정리, 루트 문서 슬림화, 하위 문서 재배치는 skill로 분리한다.\n\n## 제외 대상\n- `History.md`, `CHANGELOG.md`, `worklog.md`, 회의록, 운영 로그 같은 기록성 문서는 기본적으로 수정하지 않는다.\n- 일반 `docs/` 문서는 AI 지침 문서로 명시된 경우에만 구조 정리 대상에 포함한다.\n- 기록 문서 수정은 사용자가 명시적으로 요청한 경우에만 진행한다.\n\n## Claude\n- `.claude/skills/ai-instructions/SKILL.md`\n- 필요할 때 `/ai-instructions`로 호출한다.\n\n## Codex\n- `.agents/skills/ai-instructions/SKILL.md`\n- 필요할 때 `$ai-instructions`로 호출한다.\n\n루트 문서에는 skill 위치와 호출 방법만 짧게 안내한다."
+        "content": "# 문서 정리 Skill\n\nAI 지침 문서 정리와 리팩터링처럼 긴 절차는 루트 `CLAUDE.md` / `AGENTS.md`에 상시 포함하지 않는다.\n\n## 상시 규칙\n- React, Spring, NestJS 같은 기술 규칙은 rules 또는 하위 지침 문서 계층에 둔다.\n- 공통 규칙과 안전 규칙은 항상 적용되는 문서에 둔다.\n\n## 호출형 절차\n- 문서 구조 정리, 루트 문서 슬림화, 하위 문서 재배치는 skill로 분리한다.\n- `/ai-instructions` 실행 시 기본 하위 폴더 구조(`src/main/java`, `src/main/kotlin`, `apps`, `services`, `packages`)가 존재하면 각 경계에 맞는 하위 `CLAUDE.md` 생성을 우선 검토한다.\n- 루트 `CLAUDE.md`가 있으면 하위 `CLAUDE.md` 생성은 추가 확인 없이 진행하고, 루트 `AGENTS.md`는 참조 안내만 갱신한다.\n\n## 제외 대상\n- `History.md`, `CHANGELOG.md`, `worklog.md`, 회의록, 운영 로그 같은 기록성 문서는 기본적으로 수정하지 않는다.\n- 일반 `docs/` 문서는 AI 지침 문서로 명시된 경우에만 구조 정리 대상에 포함한다.\n- 기록 문서 수정은 사용자가 명시적으로 요청한 경우에만 진행한다.\n\n## Claude\n- `.claude/skills/ai-instructions/SKILL.md`\n- 필요할 때 `/ai-instructions`로 호출한다.\n\n## Codex\n- `.agents/skills/ai-instructions/SKILL.md`\n- 필요할 때 `$ai-instructions`로 호출한다.\n\n루트 문서에는 skill 위치와 호출 방법만 짧게 안내한다."
       },
       {
         "id": "korean-language",

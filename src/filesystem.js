@@ -103,6 +103,36 @@ function writeCursorFile(filePath, content) {
   fs.writeFileSync(filePath, `${content.trim()}\n`, 'utf8');
 }
 
+function hasRootAndNestedClaude(projectPath) {
+  const rootClaude = path.join(projectPath, 'CLAUDE.md');
+  if (!fs.existsSync(rootClaude)) {
+    return false;
+  }
+
+  return hasNestedClaude(projectPath, projectPath);
+}
+
+function hasNestedClaude(currentDir, rootDir) {
+  const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (['.git', 'node_modules', '.claude', '.cursor', '.agents'].includes(entry.name)) continue;
+
+    const nextDir = path.join(currentDir, entry.name);
+    const claudePath = path.join(nextDir, 'CLAUDE.md');
+    if (fs.existsSync(claudePath)) {
+      return true;
+    }
+
+    if (nextDir !== rootDir && hasNestedClaude(nextDir, rootDir)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -116,6 +146,7 @@ module.exports = {
   getTargetPath,
   getDocsSkillPath,
   getPackRulesPath,
+  hasRootAndNestedClaude,
   upsertManagedBlock,
   writeCursorFile,
 };

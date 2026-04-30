@@ -6,6 +6,8 @@ const {
   resolvePackName,
   renderReactTsRootContent,
   renderSpringBootRootContent,
+  renderNestjsRootContent,
+  renderCodexClaudeReferenceContent,
   renderDocsRootContent,
   renderDocsSkillContent,
   renderCursorRuleContent,
@@ -14,6 +16,7 @@ const {
   getTargetPath,
   getDocsSkillPath,
   getPackRulesPath,
+  hasRootAndNestedClaude,
   upsertManagedBlock,
   writeCursorFile,
 } = require('./filesystem');
@@ -100,7 +103,11 @@ async function handleApply(sourceState, args) {
   for (const tool of tools) {
     for (const packName of normalizedPackNames) {
       const pack = packMap[packName];
-      const packContent = renderPackContentForTool(pack, tool, parsed.autoMode);
+      const packContent = renderPackContentForTool(pack, tool, {
+        autoMode: parsed.autoMode,
+        scope,
+        projectPath,
+      });
       const targetPath = getTargetPath({
         tool,
         scope,
@@ -236,7 +243,9 @@ function expandPackNames(packNames, autoMode) {
   return Array.from(new Set(expanded));
 }
 
-function renderPackContentForTool(pack, tool, autoMode) {
+function renderPackContentForTool(pack, tool, options = {}) {
+  const { autoMode = false, scope = 'project', projectPath = process.cwd() } = options;
+
   if (tool === 'cursor') {
     return renderCursorRuleContent(pack.name, pack.content);
   }
@@ -251,16 +260,24 @@ function renderPackContentForTool(pack, tool, autoMode) {
     return renderSpringBootRootContent();
   }
 
+  if (pack.name === 'nestjs' && tool === 'claude') {
+    return renderNestjsRootContent();
+  }
+
   // Codex는 rules 폴더 개념이 공식에 없어 AGENTS.md에 풀 내용을 둔다.
   if (pack.name === 'docs' && tool !== 'cursor') {
     return renderDocsRootContent(tool, { autoMode });
+  }
+
+  if (tool === 'codex' && scope === 'project' && hasRootAndNestedClaude(projectPath)) {
+    return renderCodexClaudeReferenceContent(pack.name);
   }
 
   return pack.content;
 }
 
 function shouldCreateRulesFile(packName, tool) {
-  return tool === 'claude' && ['react-ts', 'spring-boot'].includes(packName);
+  return tool === 'claude' && ['react-ts', 'spring-boot', 'nestjs'].includes(packName);
 }
 
 function validateScope(scope) {

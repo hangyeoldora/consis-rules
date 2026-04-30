@@ -31,6 +31,11 @@ const PACK_SPECS = {
     defaultScope: 'project',
     aliases: ['spring'],
   },
+  nestjs: {
+    sourceIds: [PACK_ID_MAP.nestjs],
+    defaultScope: 'project',
+    aliases: ['nest'],
+  },
   docs: {
     sourceIds: [PACK_ID_MAP.docs],
     defaultScope: 'project',
@@ -38,7 +43,7 @@ const PACK_SPECS = {
   },
 };
 
-const PACK_ORDER = ['common', 'security', 'git-workflow', 'safety', 'react-ts', 'spring-boot', 'docs'];
+const PACK_ORDER = ['common', 'security', 'git-workflow', 'safety', 'react-ts', 'spring-boot', 'nestjs', 'docs'];
 
 function getPackSource(sourcePacks, id) {
   const pack = sourcePacks.find((entry) => entry.id === id);
@@ -105,6 +110,14 @@ function renderReactTsRootContent() {
 
 function renderSpringBootRootContent() {
   return '# Consis Rules: spring-boot\n\n- 백엔드 상시 규칙: `@.claude/rules/spring-boot.md` (Claude Code가 세션마다 자동 로드).\n';
+}
+
+function renderNestjsRootContent() {
+  return '# Consis Rules: nestjs\n\n- 백엔드 상시 규칙: `@.claude/rules/nestjs.md` (Claude Code가 세션마다 자동 로드).\n';
+}
+
+function renderCodexClaudeReferenceContent(packName) {
+  return `# Consis Rules: ${packName}\n\n- Codex 작업 기준: 루트 \`CLAUDE.md\`와 하위 폴더 \`CLAUDE.md\`를 우선 참조한다.\n- AGENTS.md에는 요약 포인터만 유지하고, 상세 상시 규칙은 CLAUDE 문서 계층에서 관리한다.\n`;
 }
 
 function renderDocsRootContent(tool, { autoMode = false } = {}) {
@@ -201,6 +214,7 @@ function getCursorRuleDescription(packName) {
     safety: '파괴적 명령과 Git, 로그 노출 관련 안전 규칙을 항상 적용한다.',
     'react-ts': 'React와 TypeScript 프론트엔드 작업 규칙을 항상 적용한다.',
     'spring-boot': 'Spring Boot 백엔드 작업 규칙을 항상 적용한다.',
+    nestjs: 'NestJS 백엔드 작업 규칙을 항상 적용한다.',
     docs: 'AI 지침 문서 구조와 문서 정리 원칙을 항상 적용한다.',
   };
 
@@ -232,6 +246,8 @@ module.exports = {
   resolvePackName,
   renderReactTsRootContent,
   renderSpringBootRootContent,
+  renderNestjsRootContent,
+  renderCodexClaudeReferenceContent,
   renderDocsRootContent,
   renderDocsSkillContent,
   renderCursorRuleContent,

@@ -28,6 +28,23 @@ test('apply codex project writes full stack rules inline into AGENTS.md', async 
   assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'rules', 'react-ts.md')), false);
 });
 
+test('apply codex project keeps AGENTS.md short when root and nested CLAUDE.md exist', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-codex-claude-ref-'));
+  const nestedDir = path.join(projectDir, 'apps', 'api');
+  fs.mkdirSync(nestedDir, { recursive: true });
+  fs.writeFileSync(path.join(projectDir, 'CLAUDE.md'), '# root claude\n');
+  fs.writeFileSync(path.join(nestedDir, 'CLAUDE.md'), '# nested claude\n');
+
+  await run(['apply', 'react-ts', '--tool', 'codex', '--scope', 'project', '--project-path', projectDir]);
+
+  const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
+  assert.match(output, /ai-team-rules:start react-ts/);
+  assert.match(output, /루트 `CLAUDE.md`와 하위 폴더 `CLAUDE.md`를 우선 참조한다/);
+  assert.doesNotMatch(output, /스택 \/ 라이브러리 표준/);
+  assert.equal(fs.existsSync(path.join(projectDir, 'apps', 'AGENTS.md')), false);
+  assert.equal(fs.existsSync(path.join(projectDir, 'apps', 'api', 'AGENTS.md')), false);
+});
+
 test('apply claude project writes summary in CLAUDE.md and full rules to .claude/rules', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-claude-rules-'));
 
@@ -211,6 +228,11 @@ test('list can load packs from remote directory json', async () => {
       id: 'spring-boot',
       title: 'Spring Boot',
       rules: [{ id: 'architecture', title: '아키텍처 규칙', content: '# Spring\n\n- c' }],
+    },
+    {
+      id: 'nestjs',
+      title: 'NestJS',
+      rules: [{ id: 'stack-architecture', title: '스택 / 아키텍처 표준', content: '# NestJS\n\n- n' }],
     },
     {
       id: 'ai-instructions',
