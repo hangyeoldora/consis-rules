@@ -54,7 +54,10 @@ function getPackSource(sourcePacks, id) {
 }
 
 function getPackDefinitions(sourcePacks) {
-  return PACK_ORDER.map((name) => {
+  return PACK_ORDER.filter((name) => {
+    const spec = PACK_SPECS[name];
+    return spec.sourceIds.every((id) => sourcePacks.some((entry) => entry.id === id));
+  }).map((name) => {
     const spec = PACK_SPECS[name];
     const sourceIds = spec.sourceIds;
     const source = getSourcePacksForName(sourcePacks, name);
