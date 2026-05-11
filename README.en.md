@@ -2,9 +2,9 @@
 
 [한국어](./README.md) | [English](./README.en.md) | [简体中文](./README.zh-CN.md)
 
-A package designed to quickly align team collaboration rules across Claude, Codex, and Cursor.
-It works well for both brand-new projects and existing production projects that need refactoring/cleanup.
-Even with fully AI-native vibe coding, this helps you stabilize project rules, document structure, and shared workflows first.
+A package designed to quickly align team collaboration rules across Claude, Codex, and Cursor. <br/>
+It works well for both brand-new projects and existing production projects that need refactoring/cleanup. <br/>
+Even with fully AI-native vibe coding, this helps you stabilize project rules, document structure, and shared workflows first. <br/>
 Without extra setup work, running commands automatically creates Claude/Codex-compatible folders and documents for global or project scope.
 
 **Included packs**:

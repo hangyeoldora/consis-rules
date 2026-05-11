@@ -2,9 +2,9 @@
 
 [한국어](./README.md) | [English](./README.en.md) | [简体中文](./README.zh-CN.md)
 
-这是一个帮助团队在 Claude、Codex、Cursor 中快速统一协作规则的包。
-既适用于新项目快速接入，也适用于已运营项目的重构与整理。
-即使采用完全 AI Native 的 vibe coding，也能先稳定项目规则、文档结构和通用工作方式。
+这是一个帮助团队在 Claude、Codex、Cursor 中快速统一协作规则的包。 <br/>
+既适用于新项目快速接入，也适用于已运营项目的重构与整理。 <br/>
+即使采用完全 AI Native 的 vibe coding，也能先稳定项目规则、文档结构和通用工作方式。 <br/>
 无需额外设置，只需执行命令，即可按全局或项目范围自动生成适配 Claude/Codex 的目录与文档。
 
 **包含的 pack**:
