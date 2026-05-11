@@ -1,158 +1,129 @@
 # ai-team-rules
 
-Claude, Codex, Cursor에 상관없이 팀 협업용 AI 규칙을 빠르게 세팅·사용할 수 있게 해주는 패키지입니다.<br/>
-새 프로젝트뿐 아니라 이미 문서와 코드가 있는 기존 프로젝트에서도 `CLAUDE.md`, `AGENTS.md` 등 AI 지침 문서를 다시 정리하고 협업 친화적으로 리팩토링 방향을 잡는 데 사용할 수 있습니다.<br/>
-바이브 코딩을 하더라도 프로젝트별 규칙, 문서 구조, 공통 작업 방식이 흔들리지 않게 세팅하는 용도에 맞춰져 있습니다.<br/>
-ai 기본 규칙, 보안, git 규칙, react & ts, spring boot, nestjs 등 제공하고 있습니다.
+[한국어](./README.md) | [English](./README.en.md) | [简体中文](./README.zh-CN.md)
 
-그리고 `/ai-instructions`의 slash command의 경우, 클로드 공식문서에서 권장하는 규칙대로 명령어 실행 시, 규칙에 맞게 전체 프로젝트에 대한 문서를 생성합니다.
+Claude, Codex, Cursor 어디서 작업하든 팀 규칙을 빠르게 맞출 수 있게 만든 패키지입니다.
+새 프로젝트 시작할 때도 바로 붙여서 쓸 수 있으며, 이미 운영 중인 프로젝트를 리팩토링/정리할 때도 편리하게 쓸 수 있습니다.
+완전한 AI 네이티브로 바이브 코딩을 진행하더라도 프로젝트 규칙, 문서 구조, 공통 작업 방식이 흔들리지 않게 먼저 세팅하는 용도입니다.
+모든 규칙과 스킬에 대한 세팅을 별도 작업없이 명령어 실행만으로 전역 또는 프로젝트에 알맞게 claude/codex에 맞는 폴더와 문서를 자동으로 생성합니다.
 
-각 규칙의 내용은 Rules Directory에서 미리 확인할 수 있습니다 → [Consis Rules Directory](https://consis-rules-directory.pages.dev/)
+**\*제공 pack**:
 
-## 설치
+- AI 기본 규칙
+- 보안/하네스 규칙
+- Git 워크플로우
+- React + TypeScript
+  - react/ts 규칙은 vercel, 토스, 카카오 등 리액트에 대한 좋은 코드(클린코드) 규칙과 함께 자주 사용하는 폴더 구조 등을 내포하고 있습니다.
+- Spring Boot
+- NestJS
+  - spring boot와 NestJS 또한 클린 코드 규칙과 폴더 구조 등 보일러플레이트 구조를 내포하고 있습니다.
+- 문서 구조 규칙(`docs`, `/ai-instructions`)
+  - 해당 규칙은 claude와 codex 공식문서에서 말하는 올바른 문서(`CLAUDE.md/AGENTS.md`) 작성에 대한 방법을 정리한 것으로 해당 skill을 통해서 context와 토큰 비용을 절약할 수 있습니다. 가이드 문서가 없거나 기존에 있는 경우에도 해당 스킬을 통해 올바르게 문서를 정리할 수 있습니다.
+
+<br/>
+
+**규칙 내용**은 여기서 바로 볼 수 있습니다 => <a href="https://consis-rules-directory.pages.dev/" target="_blank" rel="noopener noreferrer">Consis Rules Directory</a>
+
+## Install
 
 ```bash
 npm install -g ai-team-rules
 ```
 
-## 먼저: react-ts
-
-프론트 프로젝트라면 보통 아래 명령부터 시작하면 됩니다.
+## Quick Start
 
 ```bash
+# ex) react-ts & /ai-instructions setting (default: claude)
 npx ai-team-rules react-ts --auto
-```
 
-기본 `tool`은 `claude`이며, 다음이 세팅됩니다.
-
-- 루트 `CLAUDE.md`에 `@.claude/rules/react-ts.md` 한 줄 포인터만 추가 (컨텍스트 낭비 최소화)
-- 풀 규칙은 `.claude/rules/react-ts.md` 파일에 저장 — Claude Code가 세션마다 자동 로드
-- `docs` pack도 함께 적용되어 `.claude/skills/ai-instructions/SKILL.md` 생성
-
-세팅 후 문서 구조를 정리하거나 점검하고 싶을 때는 `/ai-instructions`를 실행하면 됩니다.
-
-Codex 기준으로 넣고 싶으면:
-
-```bash
+# codex
 npx ai-team-rules react-ts --auto --tool codex
+
+# /ai-instructions setting
+npx ai-team-rules docs
 ```
 
-Codex는 공식 rules 폴더 개념이 없어, `AGENTS.md` managed block에 풀 규칙이 직접 삽입됩니다.
+<br/>
 
-프로젝트에 루트 `CLAUDE.md`와 하위 폴더 `CLAUDE.md`가 이미 있으면, Codex 적용 시 `AGENTS.md`에는 요약 포인터만 유지하고 상세 규칙은 CLAUDE 문서 계층을 참조합니다.
+### \* react-ts
 
-## 백엔드: spring-boot / nestjs
+`react-ts`는 스타일 룰만 있는 게 아니라, 폴더 구조/상태 관리/렌더링 안전/리팩토링 기준까지 포함합니다.  
+신규 프로젝트 시작할 때 기준선을 맞추거나, 기존 프로젝트를 점진적으로 정리할 때도 같은 규칙으로 일관되게 가져갈 수 있습니다.
+Vercel, toss, kakao 등 좋은 코드에 대한 규칙과 패턴도 포함되어 있습니다.
 
-백엔드 프로젝트는 아래처럼 적용합니다.
+### \* docs(/ai-instructions) 실행 시 프로세스
+
+- 루트 `CLAUDE.md`에 포인터만 추가
+- 풀 규칙은 `.claude/rules/react-ts.md`에 저장
+- `docs` pack 자동 적용 (`/ai-instructions` 포함)
+- 필요한 폴더/파일은 자동 생성
+
+Codex로 적용:
+
+Codex는 공식 rules 폴더 개념이 없어서 `AGENTS.md`에 managed block으로 규칙이 들어갑니다.
+
+프로젝트에 루트 `CLAUDE.md`와 하위 폴더 `CLAUDE.md`가 이미 있으면, Codex 적용 시 루트 `AGENTS.md`는 요약 포인터 중심으로 유지되고 상세 규칙은 CLAUDE 문서 계층을 참조합니다.
+
+## Backend Packs
 
 ```bash
 npx ai-team-rules spring-boot --auto
 npx ai-team-rules nestjs --auto
 ```
 
-별칭도 지원합니다.
+별칭:
 
 ```bash
 npx ai-team-rules spring --auto
 npx ai-team-rules nest --auto
 ```
 
-## common: 공통 규칙 일괄 세팅
-
-팀 공용 기본 규칙을 한 번에 깔려면 `common`을 씁니다. 세 가지 원본 팩(AI 기본 규칙 + 보안 표준 + Git 워크플로우)이 묶여 있습니다.
+## Commands
 
 ```bash
-npx ai-team-rules common --scope global
+npx ai-team-rules <pack>
+npx ai-team-rules apply <pack>
+npx ai-team-rules list
+npx ai-team-rules show <pack>
 ```
 
-## docs만 적용
+## Options
 
-문서 구조 규칙은 Claude / Codex의 md 파일 과잉 컨텍스트를 피하고 라우터 문서 패턴을 따르도록 규정돼 있습니다.
+| 옵션                    | 설명                               | 기본값             |
+| ----------------------- | ---------------------------------- | ------------------ |
+| `--auto`                | 선택한 pack에 `docs` 자동 추가     | off                |
+| `--tool <tool>`         | `claude`, `codex`, `cursor`, `all` | `claude`           |
+| `--scope <scope>`       | `project`, `global`                | pack 기본값        |
+| `--project-path <path>` | 적용할 프로젝트 경로               | 현재 경로          |
+| `--source-url <url>`    | 원격 `packs.json` URL              | 기본 Directory URL |
 
-```bash
-npx ai-team-rules docs
-```
+## Packs
 
-- 루트 `CLAUDE.md`에 짧은 문서 운영 원칙
-- `.claude/skills/ai-instructions/SKILL.md` 생성 — 필요할 때 `/ai-instructions`로 호출
+| Pack           | Scope   | 설명                                      |
+| -------------- | ------- | ----------------------------------------- |
+| `common`       | global  | AI 기본 규칙 + 보안 표준 + Git 워크플로우 |
+| `security`     | global  | 프론트/공통/AI 도구 보안                  |
+| `git-workflow` | global  | 커밋 메시지 + PR/브랜치 규칙              |
+| `safety`       | global  | 파괴적 명령, Git, 로그 노출 안전          |
+| `react-ts`     | project | React + TypeScript 상시 규칙              |
+| `spring-boot`  | project | Spring Boot 상시 규칙                     |
+| `nestjs`       | project | NestJS 상시 규칙                          |
+| `docs`         | project | 루트 문서 라우팅 + AI 문서 구조 skill     |
 
-## 전역 적용
+## Aliases
 
-전역으로 넣을 때는 `--scope global`을 사용합니다.
+| 별칭                                       | pack           |
+| ------------------------------------------ | -------------- |
+| `base`                                     | `common`       |
+| `security-standards`                       | `security`     |
+| `git`, `git-flow`                          | `git-workflow` |
+| `harness`, `harness-safety`                | `safety`       |
+| `react`, `react-typescript`                | `react-ts`     |
+| `spring`                                   | `spring-boot`  |
+| `nest`                                     | `nestjs`       |
+| `document`, `documents`, `ai-instructions` | `docs`         |
 
-```bash
-npx ai-team-rules common --scope global
-npx ai-team-rules safety --scope global
-npx ai-team-rules react-ts --auto --tool codex --scope global
-```
-
-Cursor는 공식 문서 기준으로 전역 규칙을 파일이 아니라 Settings의 User Rules로 관리합니다. 이 CLI는 Cursor 전역 규칙 파일을 억지로 만들지 않고 프로젝트 규칙만 `.cursor/rules/`에 생성합니다.
-
-<br/>
-
-## 명령어
-
-`apply`는 생략할 수 있습니다. 아래 두 명령은 동일합니다.
-
-```bash
-npx ai-team-rules apply react-ts --auto
-npx ai-team-rules react-ts --auto
-```
-
-| 명령 | 설명 | 예시 |
-| --- | --- | --- |
-| `ai-team-rules <pack>` | pack 바로 적용 | `npx ai-team-rules react-ts --auto` |
-| `ai-team-rules apply <pack>` | pack 명시 적용 | `npx ai-team-rules apply docs` |
-| `ai-team-rules list` | 사용 가능한 pack 목록 출력 | `npx ai-team-rules list` |
-| `ai-team-rules show <pack>` | pack 원문 출력 | `npx ai-team-rules show react-ts` |
-
-<br/>
-
-## 옵션
-
-| 옵션 | 필수 | 설명 | 기본값 |
-| --- | --- | --- | --- |
-| `<pack>` | 필수 | 적용할 pack 이름 또는 별칭 | 없음 |
-| `--auto` | 선택 | 선택한 pack에 `docs`를 자동으로 추가 | 꺼짐 |
-| `--tool <tool>` | 선택 | `claude`, `codex`, `cursor`, `all` 중 선택 | `claude` |
-| `--scope <scope>` | 선택 | `project`, `global` 중 선택 | pack 기본값 |
-| `--project-path <path>` | 선택 | 적용할 프로젝트 경로 지정 | 현재 디렉터리 |
-| `--source-url <url>` | 선택 | Rules Directory의 `packs.json` URL 지정 | 배포된 directory URL |
-
-<br/>
-
-## pack
-
-| Pack | 기본 scope | 설명 |
-| --- | --- | --- |
-| `common` | `global` | AI 기본 규칙 + 보안 표준 + Git 워크플로우 (번들) |
-| `security` | `global` | 프론트 / 공통 / AI 도구 보안 규칙 |
-| `git-workflow` | `global` | 커밋 메시지 + PR / 브랜치 워크플로우 |
-| `safety` | `global` | 파괴적 명령, Git, 로그 노출 안전 규칙 |
-| `react-ts` | `project` | React + TypeScript 프론트 상시 규칙 |
-| `spring-boot` | `project` | Spring Boot 백엔드 상시 규칙 |
-| `nestjs` | `project` | NestJS 백엔드 상시 규칙 |
-| `docs` | `project` | 루트 문서 라우팅 + AI 문서 구조 skill |
-
-<br/>
-
-별칭도 지원합니다.
-
-<br/>
-
-| 별칭 | 실제 pack |
-| --- | --- |
-| `base` | `common` |
-| `security-standards` | `security` |
-| `git`, `git-flow` | `git-workflow` |
-| `harness`, `harness-safety` | `safety` |
-| `react`, `react-typescript` | `react-ts` |
-| `spring` | `spring-boot` |
-| `nest` | `nestjs` |
-| `document`, `documents`, `ai-instructions` | `docs` |
-
-
-## 참고
+## References
 
 - [Anthropic Claude Code memory docs](https://code.claude.com/docs/en/memory)
 - [OpenAI Codex AGENTS.md](https://developers.openai.com/codex/guides/agents-md)
