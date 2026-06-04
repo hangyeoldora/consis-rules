@@ -1,5 +1,12 @@
 # ai-team-rules
 
+[![npm version](https://img.shields.io/npm/v/ai-team-rules?style=flat-square&color=cb3837&logo=npm)](https://www.npmjs.com/package/ai-team-rules)
+[![npm downloads](https://img.shields.io/npm/dm/ai-team-rules?style=flat-square&color=blue&logo=npm)](https://www.npmjs.com/package/ai-team-rules)
+[![license](https://img.shields.io/npm/l/ai-team-rules?style=flat-square)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/hangyeoldora/consis-rules?style=flat-square&logo=github)](https://github.com/hangyeoldora/consis-rules)
+
+> **One CLI to sync team coding rules across Claude, Codex, Cursor** — React+TS / Spring Boot / NestJS packs included.
+
 [한국어](./README.md) | [English](./README.en.md) | [简体中文](./README.zh-CN.md)
 
 A package designed to quickly align team collaboration rules across Claude, Codex, and Cursor. <br/>
