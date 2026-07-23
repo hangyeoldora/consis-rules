@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const DEFAULT_SOURCE_URL = 'https://consis-rules-directory.pages.dev/packs.json';
+const DEFAULT_FETCH_TIMEOUT_MS = 5000;
 
 const PACK_ID_MAP = {
   common: 'ai-base-rules',
@@ -106,6 +107,10 @@ function normalizeReactStackPolicy(content) {
 
 async function loadSourcePacks({ sourceUrl } = {}) {
   const remoteSourceUrl = sourceUrl || process.env.AI_TEAM_RULES_SOURCE_URL || DEFAULT_SOURCE_URL;
+  const configuredTimeout = Number(process.env.AI_TEAM_RULES_FETCH_TIMEOUT_MS);
+  const fetchTimeoutMs = Number.isFinite(configuredTimeout) && configuredTimeout > 0
+    ? configuredTimeout
+    : DEFAULT_FETCH_TIMEOUT_MS;
 
   if (process.env.AI_TEAM_RULES_OFFLINE === '1') {
     return {
@@ -116,17 +121,24 @@ async function loadSourcePacks({ sourceUrl } = {}) {
   }
 
   try {
-    const response = await fetch(remoteSourceUrl);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), fetchTimeoutMs);
+    let response;
+    try {
+      response = await fetch(remoteSourceUrl, { signal: controller.signal });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
 
-    const remotePacks = await response.json();
-    return {
-      sourcePacks: mergeRemoteWithBundledPacks(remotePacks),
-      sourceType: 'remote',
-      sourceUrl: remoteSourceUrl,
-    };
+      const remotePacks = await response.json();
+      return {
+        sourcePacks: mergeRemoteWithBundledPacks(remotePacks),
+        sourceType: 'remote',
+        sourceUrl: remoteSourceUrl,
+      };
+    } finally {
+      clearTimeout(timeout);
+    }
   } catch (error) {
     return {
       sourcePacks: getLocalSourcePacks(),

@@ -8,6 +8,8 @@ const CONFIG = {
   historyFile: 'docs/98-history/common.history.md',
   readmeFile: 'README.md',
   blockedBranches: ['main', 'master'],
+  maxDiffBytes: 500000,
+  maxFileDiffBytes: 100000,
 };
 
 const PRE_COMMIT = `#!/bin/sh
@@ -119,15 +121,37 @@ const config = {
   maxTurns: 3,
   historyFile: 'docs/98-history/common.history.md',
   readmeFile: 'README.md',
+  maxDiffBytes: 500000,
+  maxFileDiffBytes: 100000,
   ...readJson(path.join(root, '.consis-history.json'), {}),
 };
 const excluded = [config.readmeFile, config.historyFile];
-const diffArgs = ['diff', '--cached', '--binary', '--', '.', ...excluded.map((file) => ':(exclude)' + file)];
-const stagedDiff = git(diffArgs);
-if (!stagedDiff) process.exit(0);
-
-const stagedFiles = git(['diff', '--cached', '--name-only', '--', '.', ...excluded.map((file) => ':(exclude)' + file)]);
-const stagedFileList = stagedFiles.split(/\r?\n/).filter(Boolean);
+const stagedFileOutput = git(['-c', 'core.quotePath=false', 'diff', '--cached', '--name-only', '-z', '--', '.', ...excluded.map((file) => ':(exclude)' + file)]);
+const stagedFileList = stagedFileOutput.split('\0').filter(Boolean);
+if (stagedFileList.length === 0) process.exit(0);
+const stagedFiles = stagedFileList.join('\n');
+const omittedDiffFiles = [];
+const includedDiffChunks = [];
+let includedDiffBytes = 0;
+for (const file of stagedFileList) {
+  const fileStats = git(['diff', '--cached', '--numstat', '--', file]);
+  if (fileStats.startsWith('-\t-\t')) {
+    omittedDiffFiles.push(file + ' (binary)');
+    continue;
+  }
+  const fileDiff = git(['diff', '--cached', '--no-ext-diff', '--unified=3', '--', file]);
+  const fileDiffBytes = Buffer.byteLength(fileDiff, 'utf8');
+  if (
+    fileDiffBytes > config.maxFileDiffBytes
+    || includedDiffBytes + fileDiffBytes > config.maxDiffBytes
+  ) {
+    omittedDiffFiles.push(file + ' (large diff)');
+    continue;
+  }
+  includedDiffChunks.push(fileDiff);
+  includedDiffBytes += fileDiffBytes;
+}
+const stagedDiff = includedDiffChunks.filter(Boolean).join('\n');
 const sensitivePathPatterns = [
   /(^|\/)\.env(?:\.|$)/i,
   /(^|\/)(?:id_rsa|id_ed25519|credentials|secrets?)(?:\.|$)/i,
@@ -144,14 +168,41 @@ const sensitiveContentPatterns = [
   /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/,
   /\bnpm_[A-Za-z0-9]{20,}\b/,
 ];
-if (sensitiveFiles.length > 0 || sensitiveContentPatterns.some((pattern) => pattern.test(stagedDiff))) {
+const sensitiveGrepPatterns = [
+  '-----BEGIN [A-Z ]*PRIVATE KEY-----',
+  'AKIA[0-9A-Z]{16}',
+  'gh[opusr]_[A-Za-z0-9_]{20,}',
+  'xox[baprs]-[A-Za-z0-9-]{10,}',
+  'npm_[A-Za-z0-9]{20,}',
+];
+const grepResult = spawnSync('git', [
+  'grep', '--cached', '-I', '-l', '-E',
+  ...sensitiveGrepPatterns.flatMap((pattern) => ['-e', pattern]),
+  '--', '.', ...excluded.map((file) => ':(exclude)' + file),
+], {
+  cwd: root,
+  encoding: 'utf8',
+});
+if (grepResult.status !== 0 && grepResult.status !== 1) {
+  throw new Error((grepResult.stderr || grepResult.stdout || 'staged 민감정보 검사 실패').trim());
+}
+const sensitiveContentFiles = grepResult.status === 0
+  ? grepResult.stdout.trim().split(/\r?\n/).filter(Boolean)
+  : [];
+if (
+  sensitiveFiles.length > 0
+  || sensitiveContentFiles.length > 0
+  || sensitiveContentPatterns.some((pattern) => pattern.test(stagedDiff))
+) {
   console.error('[consis-history] 민감정보 가능성이 있는 staged 변경을 감지해 Claude 전송과 커밋을 중단했습니다.');
-  if (sensitiveFiles.length > 0) {
-    console.error('[consis-history] 확인할 파일: ' + sensitiveFiles.join(', '));
+  const filesToReview = Array.from(new Set([...sensitiveFiles, ...sensitiveContentFiles]));
+  if (filesToReview.length > 0) {
+    console.error('[consis-history] 확인할 파일: ' + filesToReview.join(', '));
   }
   process.exit(1);
 }
-const sourceHash = crypto.createHash('sha256').update(stagedDiff).digest('hex');
+const stagedIdentity = git(['diff', '--cached', '--raw', '--', '.', ...excluded.map((file) => ':(exclude)' + file)]);
+const sourceHash = crypto.createHash('sha256').update(stagedIdentity).digest('hex');
 const stateFile = path.join(root, '.git', 'consis-history-state.json');
 const previousState = readJson(stateFile, {});
 const allStagedFiles = git(['diff', '--cached', '--name-only']).split(/\r?\n/).filter(Boolean);
@@ -207,9 +258,14 @@ const prompt = [
   '',
   'staged 파일:',
   stagedFiles,
+  ...(omittedDiffFiles.length > 0 ? [
+    '',
+    '내용을 제외한 대형 또는 바이너리 staged 파일:',
+    omittedDiffFiles.join('\n'),
+  ] : []),
   '',
   'staged diff:',
-  stagedDiff,
+  stagedDiff || '(모든 staged 파일의 diff 내용이 크기 또는 바이너리 제한으로 제외됨)',
 ].join('\n');
 
 const configuredCommand = process.env.CONSIS_CLAUDE_BIN;
@@ -217,7 +273,7 @@ const command = configuredCommand && configuredCommand.endsWith('.js')
   ? process.execPath
   : configuredCommand || 'claude';
 const commandPrefix = configuredCommand && configuredCommand.endsWith('.js') ? [configuredCommand] : [];
-const result = spawnSync(command, [...commandPrefix, '-p', '--model', model, '--output-format', 'json', '--max-turns', String(config.maxTurns)], {
+const result = spawnSync(command, [...commandPrefix, '-p', '--model', model, '--tools', '', '--output-format', 'json', '--max-turns', String(config.maxTurns)], {
   cwd: os.tmpdir(),
   input: prompt,
   encoding: 'utf8',

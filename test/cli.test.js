@@ -168,6 +168,17 @@ test('apply spring alias resolves to spring-boot pack', async () => {
   assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'spring-boot', 'SKILL.md')), false);
 });
 
+test('apply rejects missing values and unknown options', async () => {
+  await assert.rejects(
+    () => run(['apply', 'python', '--tool', '--scope', 'project']),
+    /Missing value for --tool/,
+  );
+  await assert.rejects(
+    () => run(['apply', 'python', '--wat']),
+    /Unknown option: --wat/,
+  );
+});
+
 test('apply python alias writes clean-code rules without folder conventions', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-python-'));
 
@@ -212,6 +223,18 @@ test('history pack installs tool rules and git hook automation', async () => {
   );
 });
 
+test('history pack rejects global scope before writing files', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-global-'));
+
+  await assert.rejects(
+    () => run(['apply', 'history', '--tool', 'claude', '--scope', 'global', '--project-path', projectDir]),
+    /history pack supports project scope only/,
+  );
+
+  assert.equal(fs.existsSync(path.join(projectDir, '.consis-history.json')), false);
+  assert.equal(fs.existsSync(path.join(projectDir, '.githooks', 'pre-commit')), false);
+});
+
 test('history pack updates its managed hook and generator on reapply', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-update-'));
   spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
@@ -239,7 +262,8 @@ test('history hook adds generated README and detail history to the same commit',
   fs.writeFileSync(path.join(projectDir, 'app.js'), 'console.log("changed");\n');
   fs.writeFileSync(
     path.join(projectDir, 'fake-claude.js'),
-    `process.stdout.write(JSON.stringify({result: '\`\`\`json\\n' + JSON.stringify({
+    `if (!process.argv.includes('--tools') || process.argv[process.argv.indexOf('--tools') + 1] !== '') process.exit(3);
+process.stdout.write(JSON.stringify({result: '\`\`\`json\\n' + JSON.stringify({
       title: 'UI 색상 개선',
       readmeBullets: ['버튼 색상과 대비를 개선했습니다.'],
       historyEntryMarkdown: '### UI 색상 개선 (Improve UI Colors)\\\\n\\\\n- **작업자**: Test Worker <worker@example.com>\\\\n- **변경 내용**: 버튼 색상을 개선함.\\\\n- **사유**: staged diff 기준.\\\\n- **영향 범위**: app.js',
@@ -266,6 +290,95 @@ test('history hook adds generated README and detail history to the same commit',
   assert.match(history, /## \d{4}-\d{2}-\d{2}/);
   assert.match(history, /UI 색상 개선/);
   assert.match(history, /Test Worker/);
+});
+
+test('history hook excludes large diff content from Claude input', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-large-'));
+  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
+  await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+  fs.writeFileSync(path.join(projectDir, 'README.md'), '# Sample\n');
+  fs.writeFileSync(path.join(projectDir, 'large.txt'), 'LARGE_CONTENT_MARKER\n'.repeat(10000));
+  fs.writeFileSync(
+    path.join(projectDir, 'fake-claude.js'),
+    `let input = ''; process.stdin.setEncoding('utf8');
+process.stdin.on('data', (chunk) => { input += chunk; });
+process.stdin.on('end', () => {
+  if (input.includes('LARGE_' + 'CONTENT_MARKER') || !input.includes('large.txt (large diff)')) process.exit(4);
+  process.stdout.write(JSON.stringify({result: JSON.stringify({
+    title: 'Large file metadata',
+    readmeBullets: ['대형 파일 변경을 기록했습니다.'],
+    historyEntryMarkdown: '### Large file metadata\\\\n\\\\n- **작업자**: Test Worker',
+    classification: 'chore'
+  })}));
+});\n`,
+  );
+  spawnSync('git', ['add', '.'], { cwd: projectDir });
+
+  const commit = spawnSync('git', ['commit', '-m', 'chore: add large file'], {
+    cwd: projectDir,
+    encoding: 'utf8',
+    env: { ...process.env, CONSIS_CLAUDE_BIN: path.join(projectDir, 'fake-claude.js') },
+  });
+
+  assert.equal(commit.status, 0, commit.stderr || commit.stdout);
+});
+
+test('history hook scans excluded large files for sensitive content', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-large-secret-'));
+  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
+  await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+  fs.writeFileSync(
+    path.join(projectDir, 'large-config.txt'),
+    'padding\n'.repeat(20000) + 'AKIA1234567890ABCDEF\n',
+  );
+  spawnSync('git', ['add', 'large-config.txt'], { cwd: projectDir });
+
+  const commit = spawnSync('git', ['commit', '-m', 'chore: add large config'], {
+    cwd: projectDir,
+    encoding: 'utf8',
+    env: { ...process.env, CONSIS_CLAUDE_BIN: path.join(projectDir, 'missing-claude.js') },
+  });
+
+  assert.notEqual(commit.status, 0);
+  assert.match(commit.stderr, /민감정보 가능성이 있는 staged 변경/);
+  assert.match(commit.stderr, /large-config\.txt/);
+});
+
+test('history hook includes non-ASCII file diffs', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-unicode-'));
+  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
+  await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+  fs.writeFileSync(path.join(projectDir, 'README.md'), '# Sample\n');
+  fs.writeFileSync(path.join(projectDir, '한글.txt'), 'UNICODE_FILE_MARKER\n');
+  fs.writeFileSync(
+    path.join(projectDir, 'fake-claude.js'),
+    `let input = ''; process.stdin.setEncoding('utf8');
+process.stdin.on('data', (chunk) => { input += chunk; });
+process.stdin.on('end', () => {
+  if (!input.includes('한글.txt') || !input.includes('UNICODE_' + 'FILE_MARKER')) process.exit(5);
+  process.stdout.write(JSON.stringify({result: JSON.stringify({
+    title: 'Unicode file',
+    readmeBullets: ['한글 파일 변경을 기록했습니다.'],
+    historyEntryMarkdown: '### Unicode file\\\\n\\\\n- **작업자**: Test Worker',
+    classification: 'docs'
+  })}));
+});\n`,
+  );
+  spawnSync('git', ['add', '.'], { cwd: projectDir });
+
+  const commit = spawnSync('git', ['commit', '-m', 'docs: add Korean file'], {
+    cwd: projectDir,
+    encoding: 'utf8',
+    env: { ...process.env, CONSIS_CLAUDE_BIN: path.join(projectDir, 'fake-claude.js') },
+  });
+
+  assert.equal(commit.status, 0, commit.stderr || commit.stdout);
 });
 
 test('history hook blocks direct commits on main before calling Claude', async () => {
@@ -461,4 +574,22 @@ test('remote source is supplemented with bundled packs that are not deployed yet
 
   assert.match(logs.join('\n'), /history/);
   assert.match(logs.join('\n'), /python/);
+});
+
+test('remote source fetch times out and falls back to bundled packs', async () => {
+  const server = http.createServer(() => {});
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address();
+  const previousTimeout = process.env.AI_TEAM_RULES_FETCH_TIMEOUT_MS;
+  process.env.AI_TEAM_RULES_FETCH_TIMEOUT_MS = '50';
+
+  try {
+    const startedAt = Date.now();
+    await run(['list', '--source-url', `http://127.0.0.1:${port}/packs.json`]);
+    assert.ok(Date.now() - startedAt < 1000);
+  } finally {
+    if (previousTimeout === undefined) delete process.env.AI_TEAM_RULES_FETCH_TIMEOUT_MS;
+    else process.env.AI_TEAM_RULES_FETCH_TIMEOUT_MS = previousTimeout;
+    await new Promise((resolve) => server.close(resolve));
+  }
 });

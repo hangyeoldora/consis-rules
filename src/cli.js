@@ -102,6 +102,9 @@ async function handleApply(sourceState, args) {
 
   const scope = parsed.scope || inferDefaultScope(normalizedPackNames, packMap);
   validateScope(scope);
+  if (normalizedPackNames.includes('history') && scope !== 'project') {
+    throw new Error('The history pack supports project scope only. Use --scope project.');
+  }
 
   for (const tool of tools) {
     for (const packName of normalizedPackNames) {
@@ -166,27 +169,31 @@ function parseApplyArgs(args) {
     }
 
     if (token === '--tool') {
-      tools.push(args[index + 1]);
+      tools.push(readOptionValue(args, index, token));
       index += 1;
       continue;
     }
 
     if (token === '--scope') {
-      scope = args[index + 1];
+      scope = readOptionValue(args, index, token);
       index += 1;
       continue;
     }
 
     if (token === '--project-path') {
-      projectPath = args[index + 1];
+      projectPath = readOptionValue(args, index, token);
       index += 1;
       continue;
     }
 
     if (token === '--source-url') {
-      sourceUrl = args[index + 1];
+      sourceUrl = readOptionValue(args, index, token);
       index += 1;
       continue;
+    }
+
+    if (token.startsWith('-')) {
+      throw new Error(`Unknown option: ${token}`);
     }
 
     packNames.push(token);
@@ -200,6 +207,14 @@ function parseApplyArgs(args) {
     sourceUrl,
     autoMode,
   };
+}
+
+function readOptionValue(args, index, option) {
+  const value = args[index + 1];
+  if (!value || value.startsWith('-')) {
+    throw new Error(`Missing value for ${option}`);
+  }
+  return value;
 }
 
 function inferDefaultScope(packNames, packMap) {
@@ -330,7 +345,8 @@ function printSourceNotice(sourceState) {
 function extractSourceUrl(argv) {
   for (let index = 0; index < argv.length; index += 1) {
     if (argv[index] === '--source-url') {
-      return argv[index + 1] || DEFAULT_SOURCE_URL;
+      const value = argv[index + 1];
+      return value && !value.startsWith('-') ? value : DEFAULT_SOURCE_URL;
     }
   }
 
