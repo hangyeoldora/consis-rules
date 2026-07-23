@@ -24,6 +24,10 @@ Claude, Codex, Cursor 어디서 작업하든 팀 규칙을 빠르게 맞출 수 
 - Spring Boot
 - NestJS
   - spring boot와 NestJS 또한 클린 코드 규칙과 폴더 구조 등 보일러플레이트 구조를 내포하고 있습니다.
+- Python
+  - 폴더 구조를 강제하지 않고 가독성, 타입, 데이터 모델, 예외·리소스 처리, 테스트 경계를 다룹니다.
+- History
+  - staged 변경을 기준으로 README 요약과 `docs/98-history` 상세 이력을 생성합니다.
 - 문서 구조 규칙(`docs`, `/ai-instructions`)
   - 해당 규칙은 claude와 codex 공식문서에서 말하는 올바른 문서(`CLAUDE.md/AGENTS.md`) 작성에 대한 방법을 정리한 것으로 해당 skill을 통해서 context와 토큰 비용을 절약할 수 있습니다. 가이드 문서가 없거나 기존에 있는 경우에도 해당 스킬을 통해 올바르게 문서를 정리할 수 있습니다.
 
@@ -76,6 +80,8 @@ Codex는 공식 rules 폴더 개념이 없어서 `AGENTS.md`에 managed block으
 ```bash
 npx ai-team-rules spring-boot --auto
 npx ai-team-rules nestjs --auto
+npx ai-team-rules python --auto
+npx ai-team-rules history --tool all
 ```
 
 별칭:
@@ -115,6 +121,8 @@ npx ai-team-rules show <pack>
 | `react-ts`     | project | React + TypeScript 상시 규칙              |
 | `spring-boot`  | project | Spring Boot 상시 규칙                     |
 | `nestjs`       | project | NestJS 상시 규칙                          |
+| `python`       | project | Python 클린 코드·타입·오류 처리·테스트 규칙 |
+| `history`      | project | staged diff 기반 README·상세 변경 이력 자동화 |
 | `docs`         | project | 루트 문서 라우팅 + AI 문서 구조 skill     |
 
 ## Aliases
@@ -128,6 +136,8 @@ npx ai-team-rules show <pack>
 | `react`, `react-typescript`                | `react-ts`     |
 | `spring`                                   | `spring-boot`  |
 | `nest`                                     | `nestjs`       |
+| `py`, `python-clean-code`                  | `python`       |
+| `changelog`, `change-history`              | `history`      |
 | `document`, `documents`, `ai-instructions` | `docs`         |
 
 ## References
@@ -135,3 +145,7 @@ npx ai-team-rules show <pack>
 - [Anthropic Claude Code memory docs](https://code.claude.com/docs/en/memory)
 - [OpenAI Codex AGENTS.md](https://developers.openai.com/codex/guides/agents-md)
 - [Cursor Rules docs](https://cursor.com/docs/context/rules)
+- [Python PEP 8](https://peps.python.org/pep-0008/)
+- [Python typing best practices](https://typing.python.org/en/latest/reference/best_practices.html)
+- [LINE 코드 가독성: 도입과 원칙](https://engineering.linecorp.com/ko/blog/code-readability-vol1)
+- [NAVER D2: 테스트는 어떻게 좋은 코드를 만드는가](https://d2.naver.com/helloworld/9921217)

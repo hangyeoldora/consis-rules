@@ -1,0 +1,312 @@
+const fs = require('fs');
+const path = require('path');
+const { spawnSync } = require('child_process');
+
+const CONFIG = {
+  model: 'sonnet',
+  maxTurns: 3,
+  historyFile: 'docs/98-history/common.history.md',
+  readmeFile: 'README.md',
+  blockedBranches: ['main', 'master'],
+};
+
+const PRE_COMMIT = `#!/bin/sh
+# consis-history:managed v1
+set -eu
+
+branch="$(git branch --show-current)"
+case "$branch" in
+  main|master)
+    echo "[consis-history] $branch 브랜치 직접 커밋은 허용되지 않습니다." >&2
+    exit 1
+    ;;
+esac
+
+repo_root="$(git rev-parse --show-toplevel)"
+node "$repo_root/scripts/consis-history.js"
+`;
+
+const GENERATOR = String.raw`#!/usr/bin/env node
+// consis-history:managed v1
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const crypto = require('crypto');
+const { spawnSync } = require('child_process');
+
+let root = process.cwd();
+
+function git(args, options = {}) {
+  const result = spawnSync('git', args, {
+    cwd: root,
+    encoding: 'utf8',
+    ...options,
+  });
+  if (result.status !== 0) {
+    throw new Error((result.stderr || result.stdout || 'git 명령 실패').trim());
+  }
+  return result.stdout.trim();
+}
+
+function readJson(file, fallback) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch {
+    return fallback;
+  }
+}
+
+function readFile(file, fallback = '') {
+  try {
+    return fs.readFileSync(file, 'utf8');
+  } catch {
+    return fallback;
+  }
+}
+
+function writeAtomic(file, content) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const temporary = file + '.consis-tmp';
+  fs.writeFileSync(temporary, content, 'utf8');
+  fs.renameSync(temporary, file);
+}
+
+function insertHistory(existing, date, entry) {
+  const normalizedEntry = entry.trim();
+  const dateHeading = '## ' + date;
+  const dateIndex = existing.indexOf(dateHeading);
+
+  if (dateIndex !== -1) {
+    const insertion = dateIndex + dateHeading.length;
+    return existing.slice(0, insertion) + '\n\n' + normalizedEntry + existing.slice(insertion);
+  }
+
+  const separatorMatch = /^---\s*$/m.exec(existing);
+  const separator = separatorMatch ? separatorMatch.index : -1;
+  const block = dateHeading + '\n\n' + normalizedEntry + '\n\n---';
+  if (separator === -1) {
+    const prefix = existing.trimEnd();
+    return (prefix ? prefix + '\n\n---\n\n' : '') + block + '\n';
+  }
+  const insertion = separator + 3;
+  return existing.slice(0, insertion) + '\n\n' + block + existing.slice(insertion);
+}
+
+function insertReadme(existing, heading, bullets, link) {
+  const start = '<!-- consis-history:start -->';
+  const end = '<!-- consis-history:end -->';
+  const entry = [
+    '### ' + heading,
+    '',
+    ...bullets.map((item) => '- ' + item),
+    '- [상세 변경 내용](' + link.replace(/\\/g, '/') + ')',
+  ].join('\n');
+  const block = start + '\n' + entry + '\n' + end;
+  const startIndex = existing.indexOf(start);
+  const endIndex = existing.indexOf(end);
+
+  if (startIndex !== -1 && endIndex > startIndex) {
+    const current = existing.slice(startIndex + start.length, endIndex).trim();
+    return existing.slice(0, startIndex) + start + '\n' + entry + (current ? '\n\n' + current : '') + '\n' + existing.slice(endIndex);
+  }
+
+  return existing.trimEnd() + '\n\n## 변경 히스토리\n\n' + block + '\n';
+}
+
+root = git(['rev-parse', '--show-toplevel']);
+const config = {
+  model: 'sonnet',
+  maxTurns: 3,
+  historyFile: 'docs/98-history/common.history.md',
+  readmeFile: 'README.md',
+  ...readJson(path.join(root, '.consis-history.json'), {}),
+};
+const excluded = [config.readmeFile, config.historyFile];
+const diffArgs = ['diff', '--cached', '--binary', '--', '.', ...excluded.map((file) => ':(exclude)' + file)];
+const stagedDiff = git(diffArgs);
+if (!stagedDiff) process.exit(0);
+
+const stagedFiles = git(['diff', '--cached', '--name-only', '--', '.', ...excluded.map((file) => ':(exclude)' + file)]);
+const stagedFileList = stagedFiles.split(/\r?\n/).filter(Boolean);
+const sensitivePathPatterns = [
+  /(^|\/)\.env(?:\.|$)/i,
+  /(^|\/)(?:id_rsa|id_ed25519|credentials|secrets?)(?:\.|$)/i,
+  /\.(?:pem|key|p12|pfx)$/i,
+];
+const allowedSensitiveExamples = [/(^|\/)\.env\.(?:example|sample|template)$/i];
+const sensitiveFiles = stagedFileList.filter((file) =>
+  sensitivePathPatterns.some((pattern) => pattern.test(file))
+  && !allowedSensitiveExamples.some((pattern) => pattern.test(file)));
+const sensitiveContentPatterns = [
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
+  /\bAKIA[0-9A-Z]{16}\b/,
+  /\bgh[opusr]_[A-Za-z0-9_]{20,}\b/,
+  /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/,
+  /\bnpm_[A-Za-z0-9]{20,}\b/,
+];
+if (sensitiveFiles.length > 0 || sensitiveContentPatterns.some((pattern) => pattern.test(stagedDiff))) {
+  console.error('[consis-history] 민감정보 가능성이 있는 staged 변경을 감지해 Claude 전송과 커밋을 중단했습니다.');
+  if (sensitiveFiles.length > 0) {
+    console.error('[consis-history] 확인할 파일: ' + sensitiveFiles.join(', '));
+  }
+  process.exit(1);
+}
+const sourceHash = crypto.createHash('sha256').update(stagedDiff).digest('hex');
+const stateFile = path.join(root, '.git', 'consis-history-state.json');
+const previousState = readJson(stateFile, {});
+const allStagedFiles = git(['diff', '--cached', '--name-only']).split(/\r?\n/).filter(Boolean);
+if (
+  previousState.sourceHash === sourceHash
+  && fs.existsSync(path.join(root, config.readmeFile))
+  && fs.existsSync(path.join(root, config.historyFile))
+  && allStagedFiles.includes(config.readmeFile)
+  && allStagedFiles.includes(config.historyFile)
+) {
+  process.exit(0);
+}
+
+const now = new Date();
+const date = now.toISOString().slice(0, 10);
+const versionFile = readJson(path.join(root, 'package.json'), {});
+const version = versionFile.version ? 'v' + versionFile.version : 'Unreleased';
+const authorName = git(['config', 'user.name']) || 'Unknown';
+const authorEmail = git(['config', 'user.email']) || 'unknown';
+const branch = git(['branch', '--show-current']);
+const model = process.env.HISTORY_CLAUDE_MODEL || config.model;
+const historyPath = path.join(root, config.historyFile);
+const existingHistory = readFile(historyPath);
+const prompt = [
+  '당신은 staged Git 변경을 기록하는 append-only 변경 이력 작성기다.',
+  '커밋 타입은 보조 정보일 뿐이며 diff를 직접 분석한다. 타입이 없어도 판단한다.',
+  'style 변경도 UI, CSS, 레이아웃, 디자인에 영향이 있으면 상세히 기록한다.',
+  '단순 문서, 포맷, 기계적 변경은 간략히 기록하되 누락하지 않는다.',
+  '확인되지 않은 원인, 수치, 테스트 결과를 추측하지 않는다.',
+  '입력에는 테스트나 빌드 명령 실행 결과가 제공되지 않았다. 따라서 문법, 빌드, 테스트, 동작 검증을 완료·정상·PASS라고 쓰지 않는다.',
+  'diff에서 코드를 눈으로 확인한 것은 검증 실행이 아니다. verification에는 반드시 미실행 또는 확인되지 않음이라고 쓴다.',
+  '후속 조치는 staged diff에 TODO, 미해결 문제 또는 명시적 근거가 있을 때만 작성한다. 이미 반영된 설정을 후속 조치로 쓰거나 새로운 환경 설정을 추측해 제안하지 않는다.',
+  '모든 설명은 한국어로 작성한다. 코드 식별자와 고유명사만 원문을 유지한다.',
+  '도구를 호출하거나 저장소 파일을 수정하지 말고 제공된 입력만 분석한다.',
+  'historyEntryMarkdown에는 날짜 제목과 ---를 넣지 말고 ### 제목부터 작성한다.',
+  '일반 코드 변경은 요약, 무엇을(what), 왜(why), 어떻게(how), 검증(verification), 영향 범위(impact), 후속 조치(follow-up)를 녹인다.',
+  '간단한 변경은 불필요하게 섹션을 늘리지 않는다.',
+  '유효한 JSON만 출력한다.',
+  '',
+  '출력 형식:',
+  '{"title":"변경 제목","readmeBullets":["릴리즈 노트형 요약"],"historyEntryMarkdown":"### 변경 제목\\n\\n- **작업자**: ...","classification":"feat|fix|style|docs|chore|refactor|perf|security|ci|build|other"}',
+  '',
+  '메타데이터:',
+  '버전: ' + version,
+  '날짜: ' + date,
+  '작업자: ' + authorName + ' <' + authorEmail + '>',
+  '브랜치: ' + branch,
+  '사용 모델: ' + model,
+  '상세 문서: ' + config.historyFile,
+  '',
+  '기존 history 문서:',
+  existingHistory,
+  '',
+  'staged 파일:',
+  stagedFiles,
+  '',
+  'staged diff:',
+  stagedDiff,
+].join('\n');
+
+const configuredCommand = process.env.CONSIS_CLAUDE_BIN;
+const command = configuredCommand && configuredCommand.endsWith('.js')
+  ? process.execPath
+  : configuredCommand || 'claude';
+const commandPrefix = configuredCommand && configuredCommand.endsWith('.js') ? [configuredCommand] : [];
+const result = spawnSync(command, [...commandPrefix, '-p', '--model', model, '--output-format', 'json', '--max-turns', String(config.maxTurns)], {
+  cwd: os.tmpdir(),
+  input: prompt,
+  encoding: 'utf8',
+  maxBuffer: 20 * 1024 * 1024,
+});
+if (result.status !== 0) {
+  console.error('[consis-history] Claude CLI 실행 실패');
+  console.error((result.stderr || result.stdout || '').trim());
+  process.exit(1);
+}
+
+let envelope;
+let generated;
+try {
+  envelope = JSON.parse(result.stdout);
+  const text = envelope.result ?? envelope;
+  const normalized = typeof text === 'string'
+    ? text.trim().replace(/^\x60{3}(?:json)?\s*/i, '').replace(/\s*\x60{3}$/, '')
+    : text;
+  generated = typeof normalized === 'string' ? JSON.parse(normalized) : normalized;
+} catch (error) {
+  console.error('[consis-history] Claude 출력 JSON 파싱 실패: ' + error.message);
+  process.exit(1);
+}
+if (!generated.title || !Array.isArray(generated.readmeBullets) || !generated.historyEntryMarkdown) {
+  console.error('[consis-history] Claude 출력에 필수 필드가 없습니다.');
+  process.exit(1);
+}
+
+const history = insertHistory(existingHistory, date, generated.historyEntryMarkdown);
+const readmePath = path.join(root, config.readmeFile);
+const readme = insertReadme(
+  readFile(readmePath),
+  version + ' · ' + date + ' · ' + authorName,
+  generated.readmeBullets.slice(0, 2),
+  config.historyFile,
+);
+writeAtomic(historyPath, history);
+writeAtomic(readmePath, readme);
+git(['add', '--', config.readmeFile, config.historyFile]);
+fs.writeFileSync(stateFile, JSON.stringify({ sourceHash, generatedAt: now.toISOString() }, null, 2) + '\n', 'utf8');
+console.log('[consis-history] README와 상세 변경 이력을 현재 커밋에 추가했습니다.');
+`;
+
+function writeIfMissing(filePath, content, mode) {
+  if (fs.existsSync(filePath)) return;
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, content, 'utf8');
+  if (mode) fs.chmodSync(filePath, mode);
+}
+
+function writeManagedFile(filePath, content, mode) {
+  const marker = 'consis-history:managed';
+  if (fs.existsSync(filePath)) {
+    const current = fs.readFileSync(filePath, 'utf8');
+    if (!current.includes(marker)) {
+      throw new Error('기존 파일이 Consis 관리 파일이 아니어서 덮어쓰지 않았습니다: ' + filePath);
+    }
+  }
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, content, 'utf8');
+  if (mode) fs.chmodSync(filePath, mode);
+}
+
+function installHistoryAutomation(projectPath) {
+  const root = path.resolve(projectPath);
+  writeIfMissing(path.join(root, '.consis-history.json'), `${JSON.stringify(CONFIG, null, 2)}\n`);
+  writeManagedFile(path.join(root, '.githooks', 'pre-commit'), PRE_COMMIT, 0o755);
+  writeManagedFile(path.join(root, 'scripts', 'consis-history.js'), GENERATOR, 0o755);
+
+  const gitCheck = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  if (gitCheck.status === 0) {
+    const configured = spawnSync('git', ['config', 'core.hooksPath', '.githooks'], {
+      cwd: root,
+      encoding: 'utf8',
+    });
+    if (configured.status !== 0) {
+      throw new Error(`Git hooks 경로 설정 실패: ${(configured.stderr || configured.stdout).trim()}`);
+    }
+  }
+
+  console.log(`installed history automation -> ${path.join(root, '.githooks', 'pre-commit')}`);
+}
+
+module.exports = {
+  installHistoryAutomation,
+  PRE_COMMIT,
+  GENERATOR,
+};

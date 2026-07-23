@@ -2,6 +2,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const http = require('http');
+const { spawnSync } = require('child_process');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
@@ -167,6 +168,174 @@ test('apply spring alias resolves to spring-boot pack', async () => {
   assert.equal(fs.existsSync(path.join(projectDir, '.agents', 'skills', 'spring-boot', 'SKILL.md')), false);
 });
 
+test('apply python alias writes clean-code rules without folder conventions', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-python-'));
+
+  await run(['apply', 'py', '--tool', 'codex', '--scope', 'project', '--project-path', projectDir]);
+
+  const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
+  assert.match(output, /ai-team-rules:start python/);
+  assert.match(output, /Python 스택 \/ 코드 스타일 표준/);
+  assert.match(output, /가독성과 함수 설계/);
+  assert.match(output, /예외 \/ 리소스 \/ 로깅/);
+  assert.match(output, /Python 테스트 규칙/);
+  assert.doesNotMatch(output, /폴더 구조|디렉터리 구조|src\//);
+});
+
+test('apply python for claude writes a root pointer and full rules file', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-python-claude-'));
+
+  await run(['apply', 'python', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+
+  const rootOutput = fs.readFileSync(path.join(projectDir, 'CLAUDE.md'), 'utf8');
+  assert.match(rootOutput, /\.claude\/rules\/python\.md/);
+  assert.doesNotMatch(rootOutput, /가독성과 함수 설계/);
+
+  const rulesOutput = fs.readFileSync(path.join(projectDir, '.claude', 'rules', 'python.md'), 'utf8');
+  assert.match(rulesOutput, /Python 테스트 규칙/);
+});
+
+test('history pack installs tool rules and git hook automation', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-'));
+  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+
+  await run(['apply', 'history', '--tool', 'all', '--scope', 'project', '--project-path', projectDir]);
+
+  assert.match(fs.readFileSync(path.join(projectDir, 'CLAUDE.md'), 'utf8'), /\.claude\/rules\/history\.md/);
+  assert.match(fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8'), /staged diff/);
+  assert.match(fs.readFileSync(path.join(projectDir, '.cursor', 'rules', 'consis-history.mdc'), 'utf8'), /staged diff/);
+  assert.equal(fs.existsSync(path.join(projectDir, '.githooks', 'pre-commit')), true);
+  assert.equal(fs.existsSync(path.join(projectDir, 'scripts', 'consis-history.js')), true);
+  assert.equal(
+    spawnSync('git', ['config', 'core.hooksPath'], { cwd: projectDir, encoding: 'utf8' }).stdout.trim(),
+    '.githooks',
+  );
+});
+
+test('history pack updates its managed hook and generator on reapply', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-update-'));
+  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+  fs.writeFileSync(
+    path.join(projectDir, '.githooks', 'pre-commit'),
+    '#!/bin/sh\n# consis-history:managed old\nexit 99\n',
+  );
+
+  await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+
+  const hook = fs.readFileSync(path.join(projectDir, '.githooks', 'pre-commit'), 'utf8');
+  assert.match(hook, /consis-history:managed v1/);
+  assert.doesNotMatch(hook, /exit 99/);
+});
+
+test('history hook adds generated README and detail history to the same commit', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-commit-'));
+  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
+
+  await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+  fs.writeFileSync(path.join(projectDir, 'README.md'), '# Sample\n');
+  fs.writeFileSync(path.join(projectDir, 'app.js'), 'console.log("changed");\n');
+  fs.writeFileSync(
+    path.join(projectDir, 'fake-claude.js'),
+    `process.stdout.write(JSON.stringify({result: '\`\`\`json\\n' + JSON.stringify({
+      title: 'UI 색상 개선',
+      readmeBullets: ['버튼 색상과 대비를 개선했습니다.'],
+      historyEntryMarkdown: '### UI 색상 개선 (Improve UI Colors)\\\\n\\\\n- **작업자**: Test Worker <worker@example.com>\\\\n- **변경 내용**: 버튼 색상을 개선함.\\\\n- **사유**: staged diff 기준.\\\\n- **영향 범위**: app.js',
+      classification: 'style'
+    }) + '\\n\`\`\`'}));\n`,
+  );
+  spawnSync('git', ['add', '.'], { cwd: projectDir });
+
+  const commit = spawnSync('git', ['commit', '-m', 'style: improve colors'], {
+    cwd: projectDir,
+    encoding: 'utf8',
+    env: { ...process.env, CONSIS_CLAUDE_BIN: path.join(projectDir, 'fake-claude.js') },
+  });
+
+  assert.equal(commit.status, 0, commit.stderr || commit.stdout);
+  const committed = spawnSync('git', ['show', '--name-only', '--format='], {
+    cwd: projectDir,
+    encoding: 'utf8',
+  }).stdout;
+  assert.match(committed, /README\.md/);
+  assert.match(committed, /docs\/98-history\/common\.history\.md/);
+  assert.match(fs.readFileSync(path.join(projectDir, 'README.md'), 'utf8'), /상세 변경 내용/);
+  const history = fs.readFileSync(path.join(projectDir, 'docs', '98-history', 'common.history.md'), 'utf8');
+  assert.match(history, /## \d{4}-\d{2}-\d{2}/);
+  assert.match(history, /UI 색상 개선/);
+  assert.match(history, /Test Worker/);
+});
+
+test('history hook blocks direct commits on main before calling Claude', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-main-'));
+  spawnSync('git', ['init', '-b', 'main'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
+  await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+  fs.writeFileSync(path.join(projectDir, 'app.js'), 'console.log("blocked");\n');
+  spawnSync('git', ['add', 'app.js'], { cwd: projectDir });
+
+  const commit = spawnSync('git', ['commit', '-m', 'feat: blocked'], {
+    cwd: projectDir,
+    encoding: 'utf8',
+    env: { ...process.env, CONSIS_CLAUDE_BIN: path.join(projectDir, 'missing-claude.js') },
+  });
+
+  assert.notEqual(commit.status, 0);
+  assert.match(commit.stderr, /main 브랜치 직접 커밋/);
+  assert.match(spawnSync('git', ['diff', '--cached', '--name-only'], {
+    cwd: projectDir,
+    encoding: 'utf8',
+  }).stdout, /app\.js/);
+});
+
+test('history hook aborts commit and keeps staged source when Claude fails', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-failure-'));
+  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
+  await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+  fs.writeFileSync(path.join(projectDir, 'app.js'), 'console.log("kept");\n');
+  fs.writeFileSync(path.join(projectDir, 'failing-claude.js'), 'process.exit(2);\n');
+  spawnSync('git', ['add', 'app.js'], { cwd: projectDir });
+
+  const commit = spawnSync('git', ['commit', '-m', 'feat: should fail'], {
+    cwd: projectDir,
+    encoding: 'utf8',
+    env: { ...process.env, CONSIS_CLAUDE_BIN: path.join(projectDir, 'failing-claude.js') },
+  });
+
+  assert.notEqual(commit.status, 0);
+  assert.match(commit.stderr, /Claude CLI 실행 실패/);
+  assert.match(spawnSync('git', ['diff', '--cached', '--name-only'], {
+    cwd: projectDir,
+    encoding: 'utf8',
+  }).stdout, /app\.js/);
+  assert.equal(fs.existsSync(path.join(projectDir, 'docs', '98-history', 'common.history.md')), false);
+});
+
+test('history hook blocks sensitive staged files before calling Claude', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-secret-'));
+  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
+  await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+  fs.writeFileSync(path.join(projectDir, '.env'), 'EXAMPLE_SECRET=not-a-real-secret\n');
+  spawnSync('git', ['add', '.env'], { cwd: projectDir });
+
+  const commit = spawnSync('git', ['commit', '-m', 'chore: add environment'], {
+    cwd: projectDir,
+    encoding: 'utf8',
+    env: { ...process.env, CONSIS_CLAUDE_BIN: path.join(projectDir, 'missing-claude.js') },
+  });
+
+  assert.notEqual(commit.status, 0);
+  assert.match(commit.stderr, /민감정보 가능성이 있는 staged 변경/);
+  assert.match(commit.stderr, /\.env/);
+});
+
 test('auto mode adds docs but not common for default claude target', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-auto-'));
 
@@ -263,4 +432,33 @@ test('list can load packs from remote directory json', async () => {
   }
 
   assert.match(outputChunks.join('\n'), /react-ts\tproject\t1 rules\tReact \+ TypeScript/);
+});
+
+test('remote source is supplemented with bundled packs that are not deployed yet', async () => {
+  const server = http.createServer((request, response) => {
+    response.setHeader('content-type', 'application/json');
+    response.end(JSON.stringify([
+      {
+        id: 'react-typescript',
+        title: 'Remote React',
+        rules: [],
+      },
+    ]));
+  });
+
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address();
+  const logs = [];
+  const originalLog = console.log;
+  console.log = (message) => logs.push(String(message));
+
+  try {
+    await run(['list', '--source-url', `http://127.0.0.1:${port}/packs.json`]);
+  } finally {
+    console.log = originalLog;
+    await new Promise((resolve) => server.close(resolve));
+  }
+
+  assert.match(logs.join('\n'), /history/);
+  assert.match(logs.join('\n'), /python/);
 });

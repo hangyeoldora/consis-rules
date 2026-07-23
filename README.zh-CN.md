@@ -17,6 +17,10 @@
 - Spring Boot
 - NestJS
   - Spring Boot 与 NestJS 也包含 clean code 规范与 boilerplate 风格目录结构。
+- Python
+  - 不强制目录结构，涵盖可读性、类型、数据建模、异常与资源处理、测试边界。
+- History
+  - 根据 staged 变更生成 README 摘要与 `docs/98-history` 详细记录。
 - 文档结构规则（`docs`, `/ai-instructions`）
   - 该规则整理了 Claude 与 Codex 官方文档中推荐的 `CLAUDE.md/AGENTS.md` 编写方式。通过该 skill 可以节省 context 与 token 成本。无论你是否已有文档，都可以借助该 skill 进行规范化整理。
 
@@ -69,6 +73,8 @@ Codex 没有官方 rules 文件夹概念，因此规则会以 managed block 方�
 ```bash
 npx ai-team-rules spring-boot --auto
 npx ai-team-rules nestjs --auto
+npx ai-team-rules python --auto
+npx ai-team-rules history --tool all
 ```
 
 别名：
@@ -108,6 +114,8 @@ npx ai-team-rules show <pack>
 | `react-ts` | project | React + TypeScript 常驻规则 |
 | `spring-boot` | project | Spring Boot 常驻规则 |
 | `nestjs` | project | NestJS 常驻规则 |
+| `python` | project | Python clean code、类型、异常处理与测试规则 |
+| `history` | project | 基于 staged 变更的 README 摘要与详细变更记录 |
 | `docs` | project | 根文档路由 + AI 文档结构 skill |
 
 ## Aliases
@@ -121,6 +129,8 @@ npx ai-team-rules show <pack>
 | `react`, `react-typescript` | `react-ts` |
 | `spring` | `spring-boot` |
 | `nest` | `nestjs` |
+| `py`, `python-clean-code` | `python` |
+| `changelog`, `change-history` | `history` |
 | `document`, `documents`, `ai-instructions` | `docs` |
 
 ## References
@@ -128,3 +138,7 @@ npx ai-team-rules show <pack>
 - [Anthropic Claude Code memory docs](https://code.claude.com/docs/en/memory)
 - [OpenAI Codex AGENTS.md](https://developers.openai.com/codex/guides/agents-md)
 - [Cursor Rules docs](https://cursor.com/docs/context/rules)
+- [Python PEP 8](https://peps.python.org/pep-0008/)
+- [Python typing best practices](https://typing.python.org/en/latest/reference/best_practices.html)
+- [LINE：代码可读性](https://engineering.linecorp.com/ko/blog/code-readability-vol1)
+- [NAVER D2：测试如何改善代码](https://d2.naver.com/helloworld/9921217)

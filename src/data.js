@@ -36,6 +36,16 @@ const PACK_SPECS = {
     defaultScope: 'project',
     aliases: ['nest'],
   },
+  python: {
+    sourceIds: [PACK_ID_MAP.python],
+    defaultScope: 'project',
+    aliases: ['py', 'python-clean-code'],
+  },
+  history: {
+    sourceIds: [PACK_ID_MAP.history],
+    defaultScope: 'project',
+    aliases: ['changelog', 'change-history'],
+  },
   docs: {
     sourceIds: [PACK_ID_MAP.docs],
     defaultScope: 'project',
@@ -43,7 +53,7 @@ const PACK_SPECS = {
   },
 };
 
-const PACK_ORDER = ['common', 'security', 'git-workflow', 'safety', 'react-ts', 'spring-boot', 'nestjs', 'docs'];
+const PACK_ORDER = ['common', 'security', 'git-workflow', 'safety', 'react-ts', 'spring-boot', 'nestjs', 'python', 'history', 'docs'];
 
 function getPackSource(sourcePacks, id) {
   const pack = sourcePacks.find((entry) => entry.id === id);
@@ -117,6 +127,14 @@ function renderSpringBootRootContent() {
 
 function renderNestjsRootContent() {
   return '# Consis Rules: nestjs\n\n- 백엔드 상시 규칙: `@.claude/rules/nestjs.md` (Claude Code가 세션마다 자동 로드).\n';
+}
+
+function renderPythonRootContent() {
+  return '# Consis Rules: python\n\n- Python 상시 규칙: `@.claude/rules/python.md` (Claude Code가 세션마다 자동 로드).\n';
+}
+
+function renderHistoryRootContent() {
+  return '# Consis Rules: history\n\n- 커밋 변경 이력 규칙: `@.claude/rules/history.md` (Claude Code가 세션마다 자동 로드).\n';
 }
 
 function renderCodexClaudeReferenceContent(packName) {
@@ -218,6 +236,8 @@ function getCursorRuleDescription(packName) {
     'react-ts': 'React와 TypeScript 프론트엔드 작업 규칙을 항상 적용한다.',
     'spring-boot': 'Spring Boot 백엔드 작업 규칙을 항상 적용한다.',
     nestjs: 'NestJS 백엔드 작업 규칙을 항상 적용한다.',
+    python: 'Python 클린 코드, 타입, 오류 처리, 테스트 규칙을 항상 적용한다.',
+    history: 'staged 변경의 README 요약과 상세 변경 이력 생성 규칙을 적용한다.',
     docs: 'AI 지침 문서 구조와 문서 정리 원칙을 항상 적용한다.',
   };
 
@@ -250,6 +270,8 @@ module.exports = {
   renderReactTsRootContent,
   renderSpringBootRootContent,
   renderNestjsRootContent,
+  renderPythonRootContent,
+  renderHistoryRootContent,
   renderCodexClaudeReferenceContent,
   renderDocsRootContent,
   renderDocsSkillContent,

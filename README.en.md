@@ -24,6 +24,10 @@ Without extra setup work, running commands automatically creates Claude/Codex-co
 - Spring Boot
 - NestJS
   - Spring Boot and NestJS packs also include clean-code practices and boilerplate-style folder structures.
+- Python
+  - Covers readability, typing, data modeling, error/resource handling, and test boundaries without prescribing folders.
+- History
+  - Generates a README summary and detailed `docs/98-history` records from staged changes.
 - Documentation structure rules (`docs`, `/ai-instructions`)
   - These rules summarize best practices for writing `CLAUDE.md/AGENTS.md` from official Claude and Codex documentation. This skill helps reduce context and token cost. Whether guide docs are missing or already exist, you can reorganize them properly with this skill.
 
@@ -76,6 +80,8 @@ If root `CLAUDE.md` and nested `CLAUDE.md` files already exist, applying Codex k
 ```bash
 npx ai-team-rules spring-boot --auto
 npx ai-team-rules nestjs --auto
+npx ai-team-rules python --auto
+npx ai-team-rules history --tool all
 ```
 
 Aliases:
@@ -115,6 +121,8 @@ npx ai-team-rules show <pack>
 | `react-ts` | project | React + TypeScript always-on rules |
 | `spring-boot` | project | Spring Boot always-on rules |
 | `nestjs` | project | NestJS always-on rules |
+| `python` | project | Python clean code, typing, error handling, and testing rules |
+| `history` | project | Staged README summary and detailed change history |
 | `docs` | project | Root doc routing + AI doc structure skill |
 
 ## Aliases
@@ -128,6 +136,8 @@ npx ai-team-rules show <pack>
 | `react`, `react-typescript` | `react-ts` |
 | `spring` | `spring-boot` |
 | `nest` | `nestjs` |
+| `py`, `python-clean-code` | `python` |
+| `changelog`, `change-history` | `history` |
 | `document`, `documents`, `ai-instructions` | `docs` |
 
 ## References
@@ -135,3 +145,7 @@ npx ai-team-rules show <pack>
 - [Anthropic Claude Code memory docs](https://code.claude.com/docs/en/memory)
 - [OpenAI Codex AGENTS.md](https://developers.openai.com/codex/guides/agents-md)
 - [Cursor Rules docs](https://cursor.com/docs/context/rules)
+- [Python PEP 8](https://peps.python.org/pep-0008/)
+- [Python typing best practices](https://typing.python.org/en/latest/reference/best_practices.html)
+- [LINE: On code readability](https://engineering.linecorp.com/en/blog/code-readability-vol1)
+- [NAVER D2: How tests make code better](https://d2.naver.com/helloworld/9921217)

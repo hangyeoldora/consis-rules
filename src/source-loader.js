@@ -11,6 +11,8 @@ const PACK_ID_MAP = {
   'react-ts': 'react-typescript',
   'spring-boot': 'spring-boot',
   nestjs: 'nestjs',
+  python: 'python',
+  history: 'history',
   docs: 'ai-instructions',
 };
 
@@ -34,6 +36,13 @@ function normalizeRemoteSourcePacks(remotePacks) {
 
     return clonedPack;
   });
+}
+
+function mergeRemoteWithBundledPacks(remotePacks) {
+  const normalizedRemote = normalizeRemoteSourcePacks(remotePacks);
+  const remoteIds = new Set(normalizedRemote.map((pack) => pack.id));
+  const bundledOnly = getLocalSourcePacks().filter((pack) => !remoteIds.has(pack.id));
+  return [...normalizedRemote, ...bundledOnly];
 }
 
 function normalizeReactStackPolicy(content) {
@@ -114,7 +123,7 @@ async function loadSourcePacks({ sourceUrl } = {}) {
 
     const remotePacks = await response.json();
     return {
-      sourcePacks: normalizeRemoteSourcePacks(remotePacks),
+      sourcePacks: mergeRemoteWithBundledPacks(remotePacks),
       sourceType: 'remote',
       sourceUrl: remoteSourceUrl,
     };
@@ -132,4 +141,5 @@ module.exports = {
   DEFAULT_SOURCE_URL,
   PACK_ID_MAP,
   loadSourcePacks,
+  mergeRemoteWithBundledPacks,
 };
