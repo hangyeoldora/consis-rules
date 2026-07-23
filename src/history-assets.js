@@ -5,7 +5,7 @@ const { spawnSync } = require('child_process');
 const CONFIG = {
   model: 'sonnet',
   maxTurns: 3,
-  historyFile: 'docs/98-history/common.history.md',
+  historyFile: 'docs/history/common.history.md',
   readmeFile: 'README.md',
   blockedBranches: ['main', 'master'],
   maxDiffBytes: 500000,
@@ -119,7 +119,7 @@ root = git(['rev-parse', '--show-toplevel']);
 const config = {
   model: 'sonnet',
   maxTurns: 3,
-  historyFile: 'docs/98-history/common.history.md',
+  historyFile: 'docs/history/common.history.md',
   readmeFile: 'README.md',
   maxDiffBytes: 500000,
   maxFileDiffBytes: 100000,
@@ -325,6 +325,19 @@ function writeIfMissing(filePath, content, mode) {
   if (mode) fs.chmodSync(filePath, mode);
 }
 
+function writeHistoryConfig(filePath) {
+  if (!fs.existsSync(filePath)) {
+    writeIfMissing(filePath, `${JSON.stringify(CONFIG, null, 2)}\n`);
+    return;
+  }
+
+  const current = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  if (current.historyFile === 'docs/98-history/common.history.md') {
+    current.historyFile = CONFIG.historyFile;
+    fs.writeFileSync(filePath, `${JSON.stringify(current, null, 2)}\n`, 'utf8');
+  }
+}
+
 function writeManagedFile(filePath, content, mode) {
   const marker = 'consis-history:managed';
   if (fs.existsSync(filePath)) {
@@ -340,7 +353,7 @@ function writeManagedFile(filePath, content, mode) {
 
 function installHistoryAutomation(projectPath) {
   const root = path.resolve(projectPath);
-  writeIfMissing(path.join(root, '.consis-history.json'), `${JSON.stringify(CONFIG, null, 2)}\n`);
+  writeHistoryConfig(path.join(root, '.consis-history.json'));
   writeManagedFile(path.join(root, '.githooks', 'pre-commit'), PRE_COMMIT, 0o755);
   writeManagedFile(path.join(root, 'scripts', 'consis-history.js'), GENERATOR, 0o755);
 
