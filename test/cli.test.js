@@ -216,6 +216,7 @@ test('history pack installs tool rules and git hook automation', async () => {
   assert.match(fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8'), /staged diff/);
   assert.match(fs.readFileSync(path.join(projectDir, '.cursor', 'rules', 'consis-history.mdc'), 'utf8'), /staged diff/);
   assert.equal(fs.existsSync(path.join(projectDir, '.githooks', 'pre-commit')), true);
+  assert.match(fs.readFileSync(path.join(projectDir, '.githooks', 'pre-commit'), 'utf8'), /HISTORY_DISABLE=1/);
   assert.equal(fs.existsSync(path.join(projectDir, 'scripts', 'consis-history.js')), true);
   assert.equal(
     spawnSync('git', ['config', 'core.hooksPath'], { cwd: projectDir, encoding: 'utf8' }).stdout.trim(),
@@ -291,6 +292,8 @@ process.stdout.write(JSON.stringify({result: '\`\`\`json\\n' + JSON.stringify({
   assert.match(committed, /README\.md/);
   assert.match(committed, /docs\/history\/common\.history\.md/);
   assert.match(fs.readFileSync(path.join(projectDir, 'README.md'), 'utf8'), /상세 변경 내용/);
+  assert.match(fs.readFileSync(path.join(projectDir, 'README.md'), 'utf8'), /\[style\] UI 색상 개선 - \d{4}-\d{2}-\d{2}/);
+  assert.match(fs.readFileSync(path.join(projectDir, 'README.md'), 'utf8'), /작업자: Test Worker <worker@example.com>/);
   const history = fs.readFileSync(path.join(projectDir, 'docs', 'history', 'common.history.md'), 'utf8');
   assert.match(history, /## \d{4}-\d{2}-\d{2}/);
   assert.match(history, /UI 색상 개선/);

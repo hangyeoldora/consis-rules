@@ -16,6 +16,11 @@ const PRE_COMMIT = `#!/bin/sh
 # consis-history:managed v1
 set -eu
 
+if [ "\${HISTORY_DISABLE:-}" = "1" ]; then
+  echo "[history] hook disabled by HISTORY_DISABLE=1"
+  exit 0
+fi
+
 branch="$(git branch --show-current)"
 case "$branch" in
   main|master)
@@ -48,6 +53,27 @@ function git(args, options = {}) {
     throw new Error((result.stderr || result.stdout || 'git 명령 실패').trim());
   }
   return result.stdout.trim();
+}
+
+function gitOptional(args, fallback = '') {
+  const result = spawnSync('git', args, {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  if (result.status !== 0) return fallback;
+  return result.stdout.trim() || fallback;
+}
+
+function formatAuthor(name, email) {
+  if (name && email) return name + ' <' + email + '>';
+  if (name) return name;
+  if (email) return email;
+  return 'Unknown';
+}
+
+function normalizeClassification(value) {
+  const allowed = new Set(['feat', 'fix', 'style', 'docs', 'chore', 'refactor', 'perf', 'security', 'ci', 'build', 'other']);
+  return allowed.has(value) ? value : 'other';
 }
 
 function readJson(file, fallback) {
@@ -94,15 +120,9 @@ function insertHistory(existing, date, entry) {
   return existing.slice(0, insertion) + '\n\n' + block + existing.slice(insertion);
 }
 
-function insertReadme(existing, heading, bullets, link) {
+function insertReadme(existing, entry) {
   const start = '<!-- consis-history:start -->';
   const end = '<!-- consis-history:end -->';
-  const entry = [
-    '### ' + heading,
-    '',
-    ...bullets.map((item) => '- ' + item),
-    '- [상세 변경 내용](' + link.replace(/\\/g, '/') + ')',
-  ].join('\n');
   const block = start + '\n' + entry + '\n' + end;
   const startIndex = existing.indexOf(start);
   const endIndex = existing.indexOf(end);
@@ -112,7 +132,17 @@ function insertReadme(existing, heading, bullets, link) {
     return existing.slice(0, startIndex) + start + '\n' + entry + (current ? '\n\n' + current : '') + '\n' + existing.slice(endIndex);
   }
 
-  return existing.trimEnd() + '\n\n## 변경 히스토리\n\n' + block + '\n';
+  return existing.trimEnd() + '\n\n## \uBCC0\uACBD \uD788\uC2A4\uD1A0\uB9AC\n\n' + block + '\n';
+}
+
+function renderReadmeEntry({ scope, title, date, author, bullets, link }) {
+  return [
+    '### [' + scope + '] ' + title + ' - ' + date,
+    '',
+    '- \uC791\uC5C5\uC790: ' + author,
+    ...bullets.map((item) => '- ' + item),
+    '- [\uC0C1\uC138 \uBCC0\uACBD \uB0B4\uC6A9](' + link.replace(/\\/g, '/') + ')',
+  ].join('\n');
 }
 
 root = git(['rev-parse', '--show-toplevel']);
@@ -125,7 +155,7 @@ const config = {
   maxFileDiffBytes: 100000,
   ...readJson(path.join(root, '.consis-history.json'), {}),
 };
-const excluded = [config.readmeFile, config.historyFile];
+const excluded = [config.historyFile];
 const stagedFileOutput = git(['-c', 'core.quotePath=false', 'diff', '--cached', '--name-only', '-z', '--', '.', ...excluded.map((file) => ':(exclude)' + file)]);
 const stagedFileList = stagedFileOutput.split('\0').filter(Boolean);
 if (stagedFileList.length === 0) process.exit(0);
@@ -219,9 +249,10 @@ if (
 const now = new Date();
 const date = now.toISOString().slice(0, 10);
 const versionFile = readJson(path.join(root, 'package.json'), {});
-const version = versionFile.version ? 'v' + versionFile.version : 'Unreleased';
-const authorName = git(['config', 'user.name']) || 'Unknown';
-const authorEmail = git(['config', 'user.email']) || 'unknown';
+const version = versionFile.version ? 'v' + versionFile.version : 'none';
+const authorName = gitOptional(['config', 'user.name']);
+const authorEmail = gitOptional(['config', 'user.email']);
+const author = formatAuthor(authorName, authorEmail);
 const branch = git(['branch', '--show-current']);
 const model = process.env.HISTORY_CLAUDE_MODEL || config.model;
 const historyPath = path.join(root, config.historyFile);
@@ -248,7 +279,7 @@ const prompt = [
   '메타데이터:',
   '버전: ' + version,
   '날짜: ' + date,
-  '작업자: ' + authorName + ' <' + authorEmail + '>',
+  '작업자: ' + author,
   '브랜치: ' + branch,
   '사용 모델: ' + model,
   '상세 문서: ' + config.historyFile,
@@ -304,12 +335,18 @@ if (!generated.title || !Array.isArray(generated.readmeBullets) || !generated.hi
 }
 
 const history = insertHistory(existingHistory, date, generated.historyEntryMarkdown);
+const classification = normalizeClassification(generated.classification);
 const readmePath = path.join(root, config.readmeFile);
 const readme = insertReadme(
   readFile(readmePath),
-  version + ' · ' + date + ' · ' + authorName,
-  generated.readmeBullets.slice(0, 2),
-  config.historyFile,
+  renderReadmeEntry({
+    scope: classification,
+    title: generated.title,
+    date,
+    author,
+    bullets: generated.readmeBullets.slice(0, 2),
+    link: config.historyFile,
+  }),
 );
 writeAtomic(historyPath, history);
 writeAtomic(readmePath, readme);
