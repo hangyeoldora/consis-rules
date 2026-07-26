@@ -242,7 +242,7 @@ test('history pack updates its managed hook and generator on reapply', async () 
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
   const configPath = path.join(projectDir, '.consis-history.json');
   const oldConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-  oldConfig.historyFile = 'docs/98-history/common.history.md';
+  oldConfig.historyFile = 'docs/history/common.history.md';
   fs.writeFileSync(configPath, `${JSON.stringify(oldConfig, null, 2)}\n`);
   fs.writeFileSync(
     path.join(projectDir, '.githooks', 'pre-commit'),
@@ -254,7 +254,7 @@ test('history pack updates its managed hook and generator on reapply', async () 
   const hook = fs.readFileSync(path.join(projectDir, '.githooks', 'pre-commit'), 'utf8');
   assert.match(hook, /consis-history:managed v1/);
   assert.doesNotMatch(hook, /exit 99/);
-  assert.equal(JSON.parse(fs.readFileSync(configPath, 'utf8')).historyFile, 'docs/history/common.history.md');
+  assert.equal(JSON.parse(fs.readFileSync(configPath, 'utf8')).historyFile, '.history/common.history.md');
 });
 
 test('history hook adds generated README and detail history to the same commit', async () => {
@@ -290,11 +290,11 @@ process.stdout.write(JSON.stringify({result: '\`\`\`json\\n' + JSON.stringify({
     encoding: 'utf8',
   }).stdout;
   assert.match(committed, /README\.md/);
-  assert.match(committed, /docs\/history\/common\.history\.md/);
+  assert.match(committed, /\.history\/common\.history\.md/);
   assert.match(fs.readFileSync(path.join(projectDir, 'README.md'), 'utf8'), /상세 변경 내용/);
   assert.match(fs.readFileSync(path.join(projectDir, 'README.md'), 'utf8'), /\[style\] UI 색상 개선 - \d{4}-\d{2}-\d{2}/);
   assert.match(fs.readFileSync(path.join(projectDir, 'README.md'), 'utf8'), /작업자: Test Worker <worker@example.com>/);
-  const history = fs.readFileSync(path.join(projectDir, 'docs', 'history', 'common.history.md'), 'utf8');
+  const history = fs.readFileSync(path.join(projectDir, '.history', 'common.history.md'), 'utf8');
   assert.match(history, /## \d{4}-\d{2}-\d{2}/);
   assert.match(history, /UI 색상 개선/);
   assert.match(history, /Test Worker/);
@@ -434,7 +434,7 @@ test('history hook aborts commit and keeps staged source when Claude fails', asy
     cwd: projectDir,
     encoding: 'utf8',
   }).stdout, /app\.js/);
-  assert.equal(fs.existsSync(path.join(projectDir, 'docs', 'history', 'common.history.md')), false);
+  assert.equal(fs.existsSync(path.join(projectDir, '.history', 'common.history.md')), false);
 });
 
 test('history hook blocks sensitive staged files before calling Claude', async () => {

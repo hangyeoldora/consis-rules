@@ -20,7 +20,7 @@
 - Python
   - 不强制目录结构，涵盖可读性、类型、数据建模、异常与资源处理、测试边界。
 - History
-  - 根据 staged 变更生成 README 摘要与 `docs/history` 详细记录。
+  - 根据 staged 变更生成 README 摘要与 `.history` 详细记录。
 - 文档结构规则（`docs`, `/ai-instructions`）
   - 该规则整理了 Claude 与 Codex 官方文档中推荐的 `CLAUDE.md/AGENTS.md` 编写方式。通过该 skill 可以节省 context 与 token 成本。无论你是否已有文档，都可以借助该 skill 进行规范化整理。
 

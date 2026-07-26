@@ -5,7 +5,7 @@ const { spawnSync } = require('child_process');
 const CONFIG = {
   model: 'sonnet',
   maxTurns: 3,
-  historyFile: 'docs/history/common.history.md',
+  historyFile: '.history/common.history.md',
   readmeFile: 'README.md',
   blockedBranches: ['main', 'master'],
   maxDiffBytes: 500000,
@@ -149,7 +149,7 @@ root = git(['rev-parse', '--show-toplevel']);
 const config = {
   model: 'sonnet',
   maxTurns: 3,
-  historyFile: 'docs/history/common.history.md',
+  historyFile: '.history/common.history.md',
   readmeFile: 'README.md',
   maxDiffBytes: 500000,
   maxFileDiffBytes: 100000,
@@ -369,7 +369,10 @@ function writeHistoryConfig(filePath) {
   }
 
   const current = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  if (current.historyFile === 'docs/98-history/common.history.md') {
+  if (
+    current.historyFile === 'docs/98-history/common.history.md'
+    || current.historyFile === 'docs/history/common.history.md'
+  ) {
     current.historyFile = CONFIG.historyFile;
     fs.writeFileSync(filePath, `${JSON.stringify(current, null, 2)}\n`, 'utf8');
   }
