@@ -29,6 +29,8 @@ Without extra setup work, running commands automatically creates Claude/Codex-co
 - History
   - Generates a README summary and detailed `.history` records from staged changes.
   - When Claude CLI fails in an interactive terminal, you can continue, write a manual entry, or abort.
+  - Set `HISTORY_AI_TOOL=codex` to generate history with the Codex CLI instead of Claude.
+  - Analyzes the project structure (React, Spring Boot, Python, etc.) and automatically routes entries into feature-specific `.history/{feature}.history.md` files.
 - Documentation structure rules (`docs`, `/ai-instructions`)
   - These rules summarize best practices for writing `CLAUDE.md/AGENTS.md` from official Claude and Codex documentation. This skill helps reduce context and token cost. Whether guide docs are missing or already exist, you can reorganize them properly with this skill.
 

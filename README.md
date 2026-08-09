@@ -29,6 +29,8 @@ Claude, Codex, Cursor 어디서 작업하든 팀 규칙을 빠르게 맞출 수 
 - History
   - staged 변경을 기준으로 README 요약과 `.history` 상세 이력을 생성합니다.
   - Claude CLI 실패 시 대화형 터미널에서는 계속 커밋/수동 작성/중단을 선택할 수 있습니다.
+  - `HISTORY_AI_TOOL=codex`로 설정하면 Claude 대신 Codex CLI로 변경 이력을 생성합니다.
+  - React/Spring Boot/Python 등 프로젝트 구조를 분석해 기능별로 `.history/{feature}.history.md`에 자동으로 나눠 기록합니다.
 - 문서 구조 규칙(`docs`, `/ai-instructions`)
   - 해당 규칙은 claude와 codex 공식문서에서 말하는 올바른 문서(`CLAUDE.md/AGENTS.md`) 작성에 대한 방법을 정리한 것으로 해당 skill을 통해서 context와 토큰 비용을 절약할 수 있습니다. 가이드 문서가 없거나 기존에 있는 경우에도 해당 스킬을 통해 올바르게 문서를 정리할 수 있습니다.
 
