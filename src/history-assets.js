@@ -882,19 +882,22 @@ const effectivePrompt = aiTool === 'codex'
 const cliArgs = aiTool === 'codex'
   ? ['exec', ...(model ? ['-m', model] : []), '--sandbox', 'read-only', '--skip-git-repo-check', '--output-last-message', codexOutputFile]
   : ['-p', '--model', model, '--tools', '', '--output-format', 'json', '--max-turns', String(config.maxTurns)];
-function windowsShellQuote(value) {
-  return '"' + String(value).replace(/(["^&|<>])/g, '^$1') + '"';
+function toWindowsShellArg(value) {
+  return value === '' ? '""' : value;
+}
+function quoteWindowsCommand(command) {
+  if (/[\s&()^"]/.test(command) && !(command.startsWith('"') && command.endsWith('"'))) {
+    return '"' + command + '"';
+  }
+  return command;
 }
 function buildCommandInvocation(baseCommand, args) {
   if (baseCommand && baseCommand.endsWith('.js')) {
     return { command: process.execPath, args: [baseCommand, ...args] };
   }
   const commandName = baseCommand || aiTool;
-  if (process.platform === 'win32' && /\.(?:cmd|bat)$/i.test(commandName)) {
-    return {
-      command: 'cmd.exe',
-      args: ['/d', '/s', '/c', [commandName, ...args].map(windowsShellQuote).join(' ')],
-    };
+  if (process.platform === 'win32') {
+    return { command: quoteWindowsCommand(commandName), args: args.map(toWindowsShellArg), shell: true };
   }
   return { command: commandName, args };
 }
@@ -904,6 +907,7 @@ const result = spawnSync(invocation.command, invocation.args, {
   input: effectivePrompt,
   encoding: 'utf8',
   maxBuffer: 20 * 1024 * 1024,
+  shell: invocation.shell,
 });
 if (result.status !== 0) {
   cleanupCodexOutput();

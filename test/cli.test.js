@@ -401,6 +401,37 @@ process.stdout.write(JSON.stringify({result: '\`\`\`json\\n' + JSON.stringify({
   assert.match(history, /Test Worker/);
 });
 
+test('history hook invokes a non-.js AI binary (Windows .cmd shim) and preserves the empty --tools arg', { skip: process.platform !== 'win32' }, async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-cmdbin-'));
+  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
+
+  await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+  fs.writeFileSync(path.join(projectDir, 'app.js'), 'console.log("changed");\n');
+  const impl = path.join(projectDir, 'fake-claude-impl.js');
+  fs.writeFileSync(
+    impl,
+    "if (!process.argv.includes('--tools') || process.argv[process.argv.indexOf('--tools') + 1] !== '') process.exit(3);\n"
+    + "process.stdin.resume();process.stdin.on('end',()=>console.log(JSON.stringify({result:JSON.stringify({title:'cmd 바이너리 확인',readmeBullets:['cmd 바이너리 경로를 확인했습니다.'],historyEntryMarkdown:'### cmd 바이너리 확인\\n\\n- **작업자**: Test Worker',classification:'chore'})})))",
+  );
+  const cmdBin = path.join(projectDir, 'fake-claude.cmd');
+  fs.writeFileSync(cmdBin, `@echo off\r\nnode "${impl}" %*\r\n`);
+  spawnSync('git', ['add', '.'], { cwd: projectDir });
+
+  const commit = spawnSync('git', ['commit', '-m', 'chore: cmd binary test'], {
+    cwd: projectDir,
+    encoding: 'utf8',
+    env: { ...process.env, CONSIS_CLAUDE_BIN: cmdBin },
+  });
+
+  assert.equal(commit.status, 0, commit.stderr || commit.stdout);
+  const committed = spawnSync('git', ['show', '--name-only', '--format='], {
+    cwd: projectDir,
+    encoding: 'utf8',
+  }).stdout;
+  assert.match(committed, /\.history\/project\.history\.md/);
+});
+
 test('history hook routes nested Java agent files by inferred feature', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-route-'));
   spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
