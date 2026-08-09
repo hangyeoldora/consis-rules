@@ -137,8 +137,12 @@ function renderHistoryRootContent() {
   return '# Consis Rules: history\n\n- 커밋 변경 이력 규칙: `@.claude/rules/history.md` (Claude Code가 세션마다 자동 로드).\n';
 }
 
+function renderClaudeRulesRootContent(packName) {
+  return '# Consis Rules: ' + packName + '\n\n- 상시 적용 규칙: `@.claude/rules/' + packName + '.md` (Claude Code가 세션마다 자동 로드).\n';
+}
+
 function renderCodexClaudeReferenceContent(packName) {
-  return `# Consis Rules: ${packName}\n\n- Codex 작업 기준: 루트 \`CLAUDE.md\`와 하위 폴더 \`CLAUDE.md\`를 우선 참조한다.\n- AGENTS.md에는 요약 포인터만 유지하고, 상세 상시 규칙은 CLAUDE 문서 계층에서 관리한다.\n`;
+  return '# Consis Rules: ' + packName + '\n\n- Codex 작업 기준: 루트 `CLAUDE.md`와 하위 폴더 `CLAUDE.md`를 우선 참조한다.\n- AGENTS.md에는 요약 포인터만 유지하고, 상세 상시 규칙은 CLAUDE 문서 계층에서 관리한다.\n';
 }
 
 function renderDocsRootContent(tool, { autoMode = false } = {}) {
@@ -156,15 +160,23 @@ function renderDocsRootContent(tool, { autoMode = false } = {}) {
     '- 하위 문서는 실제 코드 책임이 있는 디렉터리 가까이에 둔다.',
     '- 기본 응답 언어는 한국어로 유지한다.',
     '',
+    '## 작업 전/후 규칙 확인',
+    '- 작업 시작 전 이번 작업에 적용되는 규칙 문서를 먼저 식별하고, 적용할 규칙 이름을 사용자에게 짧게 명시한다.',
+    '- 코드 변경 전에는 해당 규칙의 금지 사항과 완료 전 검문 항목을 확인한다.',
+    '- 작업 중 규칙 충돌이나 적용 불가 상황을 발견하면 임의로 무시하지 말고 이유와 선택지를 제시한다.',
+    '- 작업 완료 전에는 적용한 규칙을 다시 확인하고, 지킨 항목과 확인하지 못한 항목을 결과 보고에 포함한다.',
+    '- 확인하지 않은 규칙을 확인했다고 말하지 않는다. 테스트·빌드·리뷰도 실제 실행한 것만 실행했다고 말한다.',
+    '- 언어/스택별 규칙이 있는 작업은 공통 규칙보다 해당 스택 규칙의 더 구체적인 제한을 우선한다.',
+    '',
     '## Skill 위치 및 호출',
-    `- Skill 파일: \`${skillPath}\``,
-    `- 호출 명령: \`${command}\``,
+    '- Skill 파일: `' + skillPath + '`',
+    '- 호출 명령: `' + command + '`',
   ];
 
   if (autoMode) {
     lines.push('');
     lines.push('## Auto 모드 안내');
-    lines.push(`- 이 프로젝트는 필요할 때 \`${command}\`로 문서 구조를 정리하는 흐름을 사용한다.`);
+    lines.push('- 이 프로젝트에 필요한 경우 `' + command + '`로 문서 구조를 정리하는 흐름을 사용한다.');
     lines.push('- 루트 문서에는 짧은 규칙만 두고, 긴 절차와 문서 리팩터링 가이드는 skill reference로 분리한다.');
   }
 
@@ -272,6 +284,7 @@ module.exports = {
   renderNestjsRootContent,
   renderPythonRootContent,
   renderHistoryRootContent,
+  renderClaudeRulesRootContent,
   renderCodexClaudeReferenceContent,
   renderDocsRootContent,
   renderDocsSkillContent,

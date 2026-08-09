@@ -112,6 +112,10 @@ function hasRootAndNestedClaude(projectPath) {
   return hasNestedClaude(projectPath, projectPath);
 }
 
+function hasRootClaude(projectPath) {
+  return fs.existsSync(path.join(projectPath, 'CLAUDE.md'));
+}
+
 function hasNestedClaude(currentDir, rootDir) {
   const entries = fs.readdirSync(currentDir, { withFileTypes: true });
 
@@ -146,6 +150,7 @@ module.exports = {
   getTargetPath,
   getDocsSkillPath,
   getPackRulesPath,
+  hasRootClaude,
   hasRootAndNestedClaude,
   upsertManagedBlock,
   writeCursorFile,

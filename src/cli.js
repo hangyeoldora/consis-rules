@@ -9,6 +9,7 @@ const {
   renderNestjsRootContent,
   renderPythonRootContent,
   renderHistoryRootContent,
+  renderClaudeRulesRootContent,
   renderCodexClaudeReferenceContent,
   renderDocsRootContent,
   renderDocsSkillContent,
@@ -18,7 +19,7 @@ const {
   getTargetPath,
   getDocsSkillPath,
   getPackRulesPath,
-  hasRootAndNestedClaude,
+  hasRootClaude,
   upsertManagedBlock,
   writeCursorFile,
 } = require('./filesystem');
@@ -294,12 +295,16 @@ function renderPackContentForTool(pack, tool, options = {}) {
     return renderHistoryRootContent();
   }
 
+  if (tool === 'claude' && pack.name !== 'docs') {
+    return renderClaudeRulesRootContent(pack.name);
+  }
+
   // Codex는 rules 폴더 개념이 공식에 없어 AGENTS.md에 풀 내용을 둔다.
   if (pack.name === 'docs' && tool !== 'cursor') {
     return renderDocsRootContent(tool, { autoMode });
   }
 
-  if (tool === 'codex' && scope === 'project' && hasRootAndNestedClaude(projectPath)) {
+  if (tool === 'codex' && scope === 'project' && hasRootClaude(projectPath)) {
     return renderCodexClaudeReferenceContent(pack.name);
   }
 
@@ -307,7 +312,7 @@ function renderPackContentForTool(pack, tool, options = {}) {
 }
 
 function shouldCreateRulesFile(packName, tool) {
-  return tool === 'claude' && ['react-ts', 'spring-boot', 'nestjs', 'python', 'history'].includes(packName);
+  return tool === 'claude' && packName !== 'docs';
 }
 
 function validateScope(scope) {

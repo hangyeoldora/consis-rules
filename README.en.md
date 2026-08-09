@@ -28,6 +28,7 @@ Without extra setup work, running commands automatically creates Claude/Codex-co
   - Covers readability, typing, data modeling, error/resource handling, and test boundaries without prescribing folders.
 - History
   - Generates a README summary and detailed `.history` records from staged changes.
+  - When Claude CLI fails in an interactive terminal, you can continue, write a manual entry, or abort.
 - Documentation structure rules (`docs`, `/ai-instructions`)
   - These rules summarize best practices for writing `CLAUDE.md/AGENTS.md` from official Claude and Codex documentation. This skill helps reduce context and token cost. Whether guide docs are missing or already exist, you can reorganize them properly with this skill.
 
