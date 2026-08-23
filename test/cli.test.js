@@ -276,7 +276,7 @@ test('apply python for claude writes a root pointer and full rules file', async 
 
 test('history pack installs tool rules and git hook automation', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   fs.mkdirSync(path.join(projectDir, 'app', 'multi_agent'), { recursive: true });
   fs.mkdirSync(path.join(projectDir, 'app', 'domains', 'voc'), { recursive: true });
   fs.mkdirSync(path.join(projectDir, 'app', 'domains', 'tmp'), { recursive: true });
@@ -326,7 +326,7 @@ test('history pack rejects global scope before writing files', async () => {
 
 test('history pack updates its managed hook and generator on reapply', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-update-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
   const configPath = path.join(projectDir, '.consis-history.json');
   const oldConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -347,7 +347,7 @@ test('history pack updates its managed hook and generator on reapply', async () 
 
 test('history pack writes ESM generator for type module projects', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-esm-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   fs.writeFileSync(path.join(projectDir, 'package.json'), JSON.stringify({ type: 'module' }, null, 2));
 
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
@@ -360,7 +360,7 @@ test('history pack writes ESM generator for type module projects', async () => {
 
 test('history hook adds generated README and detail history to the same commit', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-commit-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
 
@@ -403,7 +403,7 @@ process.stdout.write(JSON.stringify({result: '\`\`\`json\\n' + JSON.stringify({
 
 test('history hook invokes a non-.js AI binary (Windows .cmd shim) and preserves the empty --tools arg', { skip: process.platform !== 'win32' }, async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-cmdbin-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
 
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
@@ -434,7 +434,7 @@ test('history hook invokes a non-.js AI binary (Windows .cmd shim) and preserves
 
 test('history hook routes nested Java agent files by inferred feature', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-route-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   fs.mkdirSync(path.join(projectDir, 'src', 'main', 'java', 'com', 'webcash', 'agent', 'agent'), { recursive: true });
   fs.writeFileSync(path.join(projectDir, 'README.md'), '# Sample\n\n## 변경 히스토리\n\n<!-- consis-history:start -->\n<!-- consis-history:end -->\n');
@@ -473,7 +473,7 @@ test('history hook routes nested Java agent files by inferred feature', async ()
 
 test('history hook creates missing routing at commit time before choosing history file', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-runtime-route-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   fs.mkdirSync(path.join(projectDir, 'src', 'main', 'java', 'com', 'webcash', 'agent', 'agent'), { recursive: true });
   fs.writeFileSync(path.join(projectDir, 'README.md'), '# Sample\n');
@@ -519,7 +519,7 @@ test('history hook creates missing routing at commit time before choosing histor
 
 test('history hook routes direct Java agent package by inferred feature', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-direct-route-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   fs.mkdirSync(path.join(projectDir, 'src', 'main', 'java', 'agent'), { recursive: true });
   fs.writeFileSync(path.join(projectDir, 'README.md'), '# Sample\n');
@@ -558,7 +558,7 @@ test('history hook routes direct Java agent package by inferred feature', async 
 
 test('history hook does not stage unstaged history config edits during routing migration', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-config-dirty-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   fs.mkdirSync(path.join(projectDir, 'src', 'main', 'java', 'agent'), { recursive: true });
   fs.writeFileSync(path.join(projectDir, 'README.md'), '# Sample\n');
@@ -597,7 +597,7 @@ test('history hook does not stage unstaged history config edits during routing m
 
 test('history hook records history system changes in history history file', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-managed-only-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
   spawnSync('git', ['add', '.'], { cwd: projectDir });
@@ -640,7 +640,7 @@ test('history hook records history system changes in history history file', asyn
 
 test('history hook lets process environment override .env values', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-env-override-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
   fs.writeFileSync(path.join(projectDir, '.env'), 'HISTORY_DISABLE=0\nHISTORY_AI_TOOL=claude\n');
@@ -666,7 +666,7 @@ test('history hook lets process environment override .env values', async () => {
 
 test('history hook parses .env without executing shell syntax', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-dotenv-safe-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
   const marker = path.join(projectDir, 'shell-executed.txt');
@@ -696,7 +696,7 @@ test('history hook parses .env without executing shell syntax', async () => {
 
 test('history hook records README-only changes as docs history', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-readme-only-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
   const fakeClaude = path.join(projectDir, 'fake-claude.js');
@@ -731,7 +731,7 @@ test('history hook records README-only changes as docs history', async () => {
 
 test('history hook excludes large diff content from Claude input', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-large-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
@@ -764,7 +764,7 @@ process.stdin.on('end', () => {
 
 test('history hook scans excluded large files for sensitive content', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-large-secret-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
@@ -787,7 +787,7 @@ test('history hook scans excluded large files for sensitive content', async () =
 
 test('history hook includes non-ASCII file diffs', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-unicode-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
@@ -841,9 +841,32 @@ test('history hook blocks direct commits on main before calling Claude', async (
   }).stdout, /app\.js/);
 });
 
+test('history hook blocks direct commits on develop before calling Claude', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-develop-'));
+  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
+  spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
+  await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+  fs.writeFileSync(path.join(projectDir, 'app.js'), 'console.log("blocked");\n');
+  spawnSync('git', ['add', 'app.js'], { cwd: projectDir });
+
+  const commit = spawnSync('git', ['commit', '-m', 'feat: blocked'], {
+    cwd: projectDir,
+    encoding: 'utf8',
+    env: { ...process.env, CONSIS_CLAUDE_BIN: path.join(projectDir, 'missing-claude.js') },
+  });
+
+  assert.notEqual(commit.status, 0);
+  assert.match(commit.stderr, /develop 브랜치 직접 커밋/);
+  assert.match(spawnSync('git', ['diff', '--cached', '--name-only'], {
+    cwd: projectDir,
+    encoding: 'utf8',
+  }).stdout, /app\.js/);
+});
+
 test('history hook aborts commit and keeps staged source when Claude fails', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-failure-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
@@ -868,7 +891,7 @@ test('history hook aborts commit and keeps staged source when Claude fails', asy
 
 test('history hook can continue without history when Claude fails and HISTORY_ON_ERROR=continue', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-failure-continue-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
@@ -899,7 +922,7 @@ test('history hook can continue without history when Claude fails and HISTORY_ON
 
 test('history hook blocks sensitive staged files before calling Claude', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-secret-'));
-  spawnSync('git', ['init', '-b', 'develop'], { cwd: projectDir });
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.name', 'Test Worker'], { cwd: projectDir });
   spawnSync('git', ['config', 'user.email', 'worker@example.com'], { cwd: projectDir });
   await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);

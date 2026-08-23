@@ -7,7 +7,7 @@ const CONFIG = {
   maxTurns: 3,
   historyFile: '.history/project.history.md',
   readmeFile: 'README.md',
-  blockedBranches: ['main', 'master'],
+  blockedBranches: ['main', 'master', 'develop'],
   maxDiffBytes: 500000,
   maxFileDiffBytes: 100000,
 };
@@ -49,7 +49,7 @@ fi
 
 branch="$(git branch --show-current)"
 case "$branch" in
-  main|master)
+  main|master|develop)
     echo "[consis-history] $branch 브랜치 직접 커밋은 허용하지 않습니다." >&2
     exit 1
     ;;
