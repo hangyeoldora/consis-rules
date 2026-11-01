@@ -174,7 +174,10 @@ test('git-workflow pack applies commit-messages and pr-safety', async () => {
   assert.match(output, /한 줄 커밋/);
   assert.match(output, /<type>: <쉬운 한국어 subject>/);
   assert.match(output, /scope를 쓰지 않는다/);
-  assert.match(output, /subject는 50자 이내의 쉬운 한국어로 작성/);
+  assert.match(output, /body와 footer는 쓰지 않는다/);
+  assert.match(output, /subject는 30자 이내로 핵심만 쓴다/);
+  assert.match(output, /명사형으로 끝낸다/);
+  assert.match(output, /fix: auth, sql2api timeout 600초 설정/);
   assert.match(output, /type 뒤 subject를 영어 문장으로 쓰지 않는다/);
   assert.match(output, /스테일.*카탈로그/);
   assert.match(output, /패키지 의존성, Dockerfile, Maven\/Gradle\/npm 빌드 설정은 `build`/);
@@ -274,6 +277,120 @@ test('apply python for claude writes a root pointer and full rules file', async 
   assert.match(rulesOutput, /SOLID \/ OOP 적용/);
 });
 
+async function captureLogs(fn) {
+  const logs = [];
+  const originalLog = console.log;
+  console.log = (message) => logs.push(String(message));
+  try {
+    await fn();
+  } finally {
+    console.log = originalLog;
+  }
+  return logs.join('\n');
+}
+
+test('every CLI pack spec resolves to a bundled source pack with unique non-empty rules', () => {
+  const { PACK_ORDER, getPackDefinitions } = require('../src/data');
+  const sourcePacks = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'packs.source.json'), 'utf8'));
+
+  assert.deepEqual(getPackDefinitions(sourcePacks).map((pack) => pack.name), PACK_ORDER);
+  for (const pack of sourcePacks) {
+    const ruleIds = pack.rules.map((rule) => rule.id);
+    assert.equal(new Set(ruleIds).size, ruleIds.length, `${pack.id} has duplicate rule ids`);
+    for (const rule of pack.rules) {
+      assert.ok(rule.content.trim().length > 0, `${pack.id}:${rule.id} is empty`);
+    }
+  }
+});
+
+test('list and show expose clean-code and electron packs from the bundled source', async () => {
+  const listed = await captureLogs(() => run(['list']));
+  assert.match(listed, /^clean-code\tproject\t1 rules\t클린 코드 공통$/m);
+  assert.match(listed, /^electron\tproject\t1 rules\tElectron$/m);
+
+  const shown = await captureLogs(() => run(['show', 'clean']));
+  assert.match(shown, /^# Consis Rules: clean-code/);
+  assert.match(shown, /분리 기준은 변경 이유다\. 줄 수만으로 쪼개지 않는다\./);
+  assert.match(shown, /늦은 결과로 상태를 덮지 않는다/);
+});
+
+test('clean-code and electron stay within the shared guide budget and link optional detail docs', () => {
+  const MAX_COMBINED_CONTENT_BYTES = 4000;
+  const sourcePacks = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'packs.source.json'), 'utf8'));
+  let combinedBytes = 0;
+
+  for (const id of ['clean-code', 'electron']) {
+    const pack = sourcePacks.find((entry) => entry.id === id);
+    const content = pack.rules.map((rule) => rule.content).join('\n');
+    combinedBytes += Buffer.byteLength(content, 'utf8');
+
+    const docPath = path.join('docs', 'packs', `${id}.md`);
+    assert.match(content, new RegExp(`consis-rules/blob/main/${docPath.replace(/\\/g, '/')}`));
+    assert.ok(fs.existsSync(path.join(__dirname, '..', docPath)), `${docPath} is missing`);
+  }
+
+  assert.ok(combinedBytes <= MAX_COMBINED_CONTENT_BYTES, `combined content is ${combinedBytes} bytes`);
+});
+
+test('apply clean-code for claude writes a root pointer and the full rules file', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-clean-code-'));
+
+  await run(['apply', 'clean-code', '--tool', 'claude', '--project-path', projectDir]);
+
+  const rootOutput = fs.readFileSync(path.join(projectDir, 'CLAUDE.md'), 'utf8');
+  assert.match(rootOutput, /ai-team-rules:start clean-code/);
+  assert.match(rootOutput, /@\.claude\/rules\/clean-code\.md/);
+  assert.doesNotMatch(rootOutput, /책임과 경계/);
+
+  const rulesOutput = fs.readFileSync(path.join(projectDir, '.claude', 'rules', 'clean-code.md'), 'utf8');
+  for (const section of ['책임과 경계', '타입·입력·상태', '비동기·수명', '리팩터링·검사']) {
+    assert.match(rulesOutput, new RegExp(`^## ${section}$`, 'm'));
+  }
+  assert.match(rulesOutput, /실패를 삼켜 성공으로 위장하지 않는다\. 의도된 best-effort 정리와 명시된 정상 계약은 예외다\./);
+  assert.match(rulesOutput, /근거 없는 타입 우회\(any, as, !\)/);
+  assert.match(rulesOutput, /만든 쪽이 모든 경로에서 해제한다/);
+  assert.match(rulesOutput, /항상 통과하는 테스트는 만들지 않는다/);
+});
+
+test('apply electron alias for codex writes IPC and process lifecycle rules inline', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-electron-'));
+
+  await run(['apply', 'electron-app', '--tool', 'codex', '--project-path', projectDir]);
+
+  const output = fs.readFileSync(path.join(projectDir, 'AGENTS.md'), 'utf8');
+  assert.match(output, /ai-team-rules:start electron/);
+  assert.match(output, /contextIsolation: true, nodeIntegration: false를 유지하고 sandbox·webSecurity를 완화하지 않는다/);
+  assert.doesNotMatch(output, /nodeIntegration.{0,20}낮추지 않는다/);
+  assert.match(output, /ipcRenderer나 임의 채널 무제한 중계를 노출하지 않는다\. 엄격한 채널 허용 목록 기반 invoke\/on은 허용한다\./);
+  assert.match(output, /송신자\(senderFrame\)와 입력/);
+  assert.match(output, /중단 뒤 출력으로 성공 처리하지 않고/);
+  assert.match(output, /실패해도 원본을 지우지 않는다/);
+  assert.match(output, /safeStorage/);
+  assert.match(output, /임시 userData·홈을 주입/);
+  assert.match(output, /업그레이드는 요청 시에만 한다/);
+});
+
+test('apply electron for cursor writes an always-apply mdc rule', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-electron-cursor-'));
+
+  await run(['apply', 'electron', '--tool', 'cursor', '--project-path', projectDir]);
+
+  const output = fs.readFileSync(path.join(projectDir, '.cursor', 'rules', 'consis-electron.mdc'), 'utf8');
+  assert.match(output, /description: Electron 프로세스 권한 경계, IPC 검증, 자식 프로세스 수명 규칙을 항상 적용한다\./);
+  assert.match(output, /alwaysApply: true/);
+  assert.match(output, /## preload·IPC/);
+});
+
+test('nestjs pack covers DI scope, exception mapping and shutdown resources', async () => {
+  const shown = await captureLogs(() => run(['show', 'nest']));
+
+  assert.match(shown, /`Scope\.REQUEST`는 요청별 상태가 꼭 필요할 때만/);
+  assert.match(shown, /singleton provider의 필드에 저장하지 않는다/);
+  assert.match(shown, /`process\.env`를 직접 읽지 않는다/);
+  assert.match(shown, /로그만 남기고 성공 응답을 돌려주지 않는다/);
+  assert.match(shown, /`app\.enableShutdownHooks\(\)`/);
+});
+
 test('history pack installs tool rules and git hook automation', async () => {
   const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-history-'));
   spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
@@ -298,6 +415,8 @@ test('history pack installs tool rules and git hook automation', async () => {
   assert.equal(fs.existsSync(path.join(projectDir, '.githooks', 'pre-commit')), true);
   assert.match(fs.readFileSync(path.join(projectDir, '.githooks', 'pre-commit'), 'utf8'), /HISTORY_DISABLE=1/);
   assert.equal(fs.existsSync(path.join(projectDir, 'scripts', 'consis-history.js')), true);
+  assert.match(fs.readFileSync(path.join(projectDir, '.githooks', 'commit-msg'), 'utf8'), /consis-commit-msg\.cjs/);
+  assert.equal(fs.existsSync(path.join(projectDir, 'scripts', 'consis-commit-msg.cjs')), true);
   const config = JSON.parse(fs.readFileSync(path.join(projectDir, '.consis-history.json'), 'utf8'));
   assert.equal(config.historyRouting['app/multi_agent/**'], '.history/multi-agent.history.md');
   assert.equal(config.historyRouting['app/domains/voc/**'], '.history/voc.history.md');
@@ -310,6 +429,42 @@ test('history pack installs tool rules and git hook automation', async () => {
     spawnSync('git', ['config', 'core.hooksPath'], { cwd: projectDir, encoding: 'utf8' }).stdout.trim(),
     '.githooks',
   );
+});
+
+test('history commit-msg hook allows one-line messages and rejects scope, body, long or sentence subjects', async () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-team-rules-commit-msg-'));
+  spawnSync('git', ['init', '-b', 'feature/history-test'], { cwd: projectDir });
+  await run(['apply', 'history', '--tool', 'claude', '--scope', 'project', '--project-path', projectDir]);
+  const checker = path.join(projectDir, 'scripts', 'consis-commit-msg.cjs');
+  const check = (message) => {
+    const file = path.join(projectDir, '.git', 'COMMIT_EDITMSG');
+    fs.writeFileSync(file, message);
+    return spawnSync(process.execPath, [checker, file], { cwd: projectDir, encoding: 'utf8' });
+  };
+
+  assert.equal(check('fix: auth, sql2api timeout 600초 설정\n').status, 0);
+  assert.equal(check('feat: 로그인 추가\n\n# Please enter the commit message\n# 주석은 무시\n').status, 0);
+  assert.equal(check("Merge branch 'develop' into feature/x\n\nConflicts:\n  a.js\n").status, 0);
+  assert.equal(check('Revert "feat: 로그인 추가"\n\nThis reverts commit abc.\n').status, 0);
+
+  const scoped = check('fix(auth): timeout 수정\n');
+  assert.equal(scoped.status, 1);
+  assert.match(scoped.stderr, /scope를 쓰지 않습니다/);
+
+  const withBody = check('fix: timeout 수정\n\n- auth timeout 600초\n');
+  assert.equal(withBody.status, 1);
+  assert.match(withBody.stderr, /body를 쓰지 않습니다/);
+
+  const sentence = check('docs: 슬롯필링 과목 판정 변경 이력에 AS-IS 와 TO-BE 를 실제 질문 흐름으로 더한다\n');
+  assert.equal(sentence.status, 1);
+  assert.match(sentence.stderr, /30자 이내/);
+  assert.match(sentence.stderr, /문장형/);
+
+  const noType = check('timeout 수정\n');
+  assert.equal(noType.status, 1);
+  assert.match(noType.stderr, /<type>: <subject>/);
+
+  assert.equal(check('fix: timeout 수정.\n').status, 1);
 });
 
 test('history pack rejects global scope before writing files', async () => {
@@ -1071,6 +1226,8 @@ test('remote source is supplemented with bundled packs that are not deployed yet
 
   assert.match(logs.join('\n'), /history/);
   assert.match(logs.join('\n'), /python/);
+  assert.match(logs.join('\n'), /^clean-code\t/m);
+  assert.match(logs.join('\n'), /^electron\t/m);
 });
 
 test('remote source fetch times out and falls back to bundled packs', async () => {
