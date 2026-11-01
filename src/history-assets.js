@@ -58,6 +58,101 @@ esac
 node "$repo_root/scripts/consis-history.js"
 `;
 
+const COMMIT_MSG = `#!/bin/sh
+# consis-history:managed v1
+set -eu
+
+repo_root="$(git rev-parse --show-toplevel)"
+
+if [ "\${HISTORY_DISABLE:-}" = "1" ]; then
+  exit 0
+fi
+
+node "$repo_root/scripts/consis-commit-msg.cjs" "$1"
+`;
+
+// 확장자를 .cjs로 두어 package.json의 type과 상관없이 CommonJS로 실행한다.
+const COMMIT_MSG_CHECKER = String.raw`#!/usr/bin/env node
+// consis-history:managed v1
+const fs = require('fs');
+const { spawnSync } = require('child_process');
+
+const TYPES = ['feat', 'fix', 'docs', 'style', 'refactor', 'test', 'chore', 'build', 'ci', 'perf'];
+const MAX_SUBJECT_LENGTH = 30;
+const EXEMPT_PREFIXES = ['Merge ', 'Revert ', 'fixup! ', 'squash! ', 'amend! '];
+const SENTENCE_ENDINGS = /(한다|했다|된다|됐다|합니다|했습니다|됩니다|입니다)$/;
+
+function commentChar() {
+  const result = spawnSync('git', ['config', 'core.commentChar'], { encoding: 'utf8' });
+  const value = result.status === 0 ? result.stdout.trim() : '';
+  return value && value !== 'auto' ? value : '#';
+}
+
+function readMessageLines(file) {
+  const marker = commentChar();
+  const lines = [];
+  for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
+    if (line.startsWith(marker + ' ------------------------ >8 ------------------------')) break;
+    if (line.startsWith(marker)) continue;
+    lines.push(line.replace(/\s+$/, ''));
+  }
+  while (lines.length && !lines[0]) lines.shift();
+  while (lines.length && !lines[lines.length - 1]) lines.pop();
+  return lines;
+}
+
+function validate(lines) {
+  const header = lines[0];
+  if (EXEMPT_PREFIXES.some((prefix) => header.startsWith(prefix))) return [];
+
+  const errors = [];
+  if (lines.length > 1) {
+    errors.push('body를 쓰지 않습니다. 한 줄 커밋만 허용합니다. 상세 내용은 history 문서에 남습니다.');
+  }
+
+  const match = header.match(/^([a-z]+)(\([^)]*\))?(!)?:\s*(.*)$/);
+  if (!match || !TYPES.includes(match[1])) {
+    errors.push('형식은 "<type>: <subject>"입니다. type: ' + TYPES.join(', '));
+    return errors;
+  }
+  if (match[2]) {
+    errors.push('scope를 쓰지 않습니다. "' + match[1] + match[2] + ':" 대신 "' + match[1] + ':"로 씁니다.');
+  }
+
+  const subject = match[4].trim();
+  if (!subject) {
+    errors.push('subject가 비어 있습니다.');
+    return errors;
+  }
+  const length = Array.from(subject).length;
+  if (length > MAX_SUBJECT_LENGTH) {
+    errors.push('subject는 ' + MAX_SUBJECT_LENGTH + '자 이내로 씁니다. 현재 ' + length + '자입니다. 대상과 변경만 남깁니다.');
+  }
+  if (/[.。]$/.test(subject)) {
+    errors.push('subject 끝에 마침표를 찍지 않습니다.');
+  }
+  if (SENTENCE_ENDINGS.test(subject)) {
+    errors.push('subject를 문장형(~한다, ~했다)으로 끝내지 않습니다. 추가, 수정, 설정처럼 명사형으로 끝냅니다.');
+  }
+  return errors;
+}
+
+const lines = readMessageLines(process.argv[2]);
+if (!lines.length) process.exit(0);
+
+const errors = validate(lines);
+if (errors.length) {
+  console.error('[consis-commit-msg] 커밋 메시지 규칙에 맞지 않아 커밋을 막았습니다.');
+  for (const error of errors) console.error('- ' + error);
+  console.error('');
+  console.error('입력한 메시지:');
+  for (const line of lines) console.error('  ' + line);
+  console.error('');
+  console.error('예: fix: auth, sql2api timeout 600초 설정');
+  process.exit(1);
+}
+`;
+
 const GENERATOR = String.raw`#!/usr/bin/env node
 // consis-history:managed v1
 const fs = require('fs');
@@ -345,6 +440,7 @@ function isHistorySystemInput(file) {
   return normalized === '.consis-history.json'
     || normalized === '.env.example'
     || normalized === 'scripts/consis-history.js'
+    || normalized === 'scripts/consis-commit-msg.cjs'
     || normalized.startsWith('.githooks/');
 }
 
@@ -542,6 +638,7 @@ function inferHistoryRouting(rootPath) {
   addRouting(routing, '.env.example', 'history');
   addRouting(routing, '.githooks/**', 'history');
   addRouting(routing, 'scripts/consis-history.js', 'history');
+  addRouting(routing, 'scripts/consis-commit-msg.cjs', 'history');
   addRouting(routing, '.consis-history.json', 'history');
   routing.default = '.history/project.history.md';
 
@@ -1138,6 +1235,7 @@ function inferHistoryRouting(root) {
   addRouting(routing, '.env.example', 'history');
   addRouting(routing, '.githooks/**', 'history');
   addRouting(routing, 'scripts/consis-history.js', 'history');
+  addRouting(routing, 'scripts/consis-commit-msg.cjs', 'history');
   addRouting(routing, '.consis-history.json', 'history');
   routing.default = CONFIG.historyFile;
 
@@ -1224,6 +1322,8 @@ function installHistoryAutomation(projectPath) {
   writeHistoryConfig(path.join(root, '.consis-history.json'), root);
   writeManagedFile(path.join(root, '.githooks', 'pre-commit'), PRE_COMMIT, 0o755);
   writeManagedFile(path.join(root, 'scripts', 'consis-history.js'), getHistoryGeneratorContent(root), 0o755);
+  writeManagedFile(path.join(root, '.githooks', 'commit-msg'), COMMIT_MSG, 0o755);
+  writeManagedFile(path.join(root, 'scripts', 'consis-commit-msg.cjs'), COMMIT_MSG_CHECKER, 0o755);
 
   const gitCheck = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], {
     cwd: root,
@@ -1246,4 +1346,6 @@ module.exports = {
   installHistoryAutomation,
   PRE_COMMIT,
   GENERATOR,
+  COMMIT_MSG,
+  COMMIT_MSG_CHECKER,
 };

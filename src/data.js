@@ -21,6 +21,11 @@ const PACK_SPECS = {
     defaultScope: 'global',
     aliases: ['harness', 'harness-safety'],
   },
+  'clean-code': {
+    sourceIds: [PACK_ID_MAP['clean-code']],
+    defaultScope: 'project',
+    aliases: ['clean', 'cleancode'],
+  },
   'react-ts': {
     sourceIds: [PACK_ID_MAP['react-ts']],
     defaultScope: 'project',
@@ -35,6 +40,11 @@ const PACK_SPECS = {
     sourceIds: [PACK_ID_MAP.nestjs],
     defaultScope: 'project',
     aliases: ['nest'],
+  },
+  electron: {
+    sourceIds: [PACK_ID_MAP.electron],
+    defaultScope: 'project',
+    aliases: ['electron-app'],
   },
   python: {
     sourceIds: [PACK_ID_MAP.python],
@@ -53,7 +63,7 @@ const PACK_SPECS = {
   },
 };
 
-const PACK_ORDER = ['common', 'security', 'git-workflow', 'safety', 'react-ts', 'spring-boot', 'nestjs', 'python', 'history', 'docs'];
+const PACK_ORDER = ['common', 'security', 'git-workflow', 'safety', 'clean-code', 'react-ts', 'spring-boot', 'nestjs', 'electron', 'python', 'history', 'docs'];
 
 function getPackSource(sourcePacks, id) {
   const pack = sourcePacks.find((entry) => entry.id === id);
@@ -245,9 +255,11 @@ function getCursorRuleDescription(packName) {
     security: '프론트엔드/공통 보안 및 AI 도구 보안 규칙을 항상 적용한다.',
     'git-workflow': '커밋 메시지와 PR/브랜치 워크플로우 규칙을 항상 적용한다.',
     safety: '파괴적 명령과 Git, 로그 노출 관련 안전 규칙을 항상 적용한다.',
+    'clean-code': '책임·부수효과 경계, 입력 검증, 상태 소유, 비동기 정리, 의미 있는 검사 규칙을 항상 적용한다.',
     'react-ts': 'React와 TypeScript 프론트엔드 작업 규칙을 항상 적용한다.',
     'spring-boot': 'Spring Boot 백엔드 작업 규칙을 항상 적용한다.',
     nestjs: 'NestJS 백엔드 작업 규칙을 항상 적용한다.',
+    electron: 'Electron 프로세스 권한 경계, IPC 검증, 자식 프로세스 수명 규칙을 항상 적용한다.',
     python: 'Python 클린 코드, 타입, 오류 처리, 테스트 규칙을 항상 적용한다.',
     history: 'staged 변경의 README 요약과 상세 변경 이력 생성 규칙을 적용한다.',
     docs: 'AI 지침 문서 구조와 문서 정리 원칙을 항상 적용한다.',
